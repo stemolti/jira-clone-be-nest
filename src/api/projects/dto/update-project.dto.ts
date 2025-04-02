@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateProjectDto {
   @IsString()
@@ -8,8 +8,4 @@ export class UpdateProjectDto {
   @IsString()
   @IsOptional()
   description?: string;
-
-  @IsInt()
-  @IsOptional()
-  updatedAt?: Date;
 }

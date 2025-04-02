@@ -8,8 +8,4 @@ export class CreateUserDTO {
   @IsString()
   @IsNotEmpty()
   name: string;
-
-  createdAt: Date;
-
-  updatedAt: Date;
 }
