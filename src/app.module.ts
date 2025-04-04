@@ -17,7 +17,8 @@ import { ConfigModule } from '@nestjs/config';
       store: redisStore,
       host: 'localhost',
       port: 6379,
-      ttl: 600
+      ttl: 600,
+      isGlobal: true,
     }),	
     UsersModule,
     ProjectsModule,
