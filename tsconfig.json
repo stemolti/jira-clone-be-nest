@@ -18,8 +18,12 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@modules/*": ["src/modules/*"],
-      "@api/*": ["src/api/*"],
+      "@modules/*": [
+        "src/modules/*"
+      ],
+      "@api/*": [
+        "src/api/*"
+      ],
     }
   }
 }
