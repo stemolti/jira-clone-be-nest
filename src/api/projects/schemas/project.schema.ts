@@ -5,6 +5,10 @@ export type ProjectDocument = HydratedDocument<Project>;
 
 @Schema({ timestamps: true })
 export class Project {
+
+  @Prop()
+  projectId: string;
+
   @Prop()
   name: string;
 

@@ -31,7 +31,7 @@ export class ProjectsService {
       const projects = await this.projectModel.find().exec();
 
       if(projects && projects.length > 0){
-        this.logger.log('Projects finded on DB');
+        this.logger.log('Projects found on DB');
         return projects
       }
       this.logger.log('No projects found in DB, fetching from Jira');
@@ -91,6 +91,7 @@ export class ProjectsService {
      const data: any = await response.json();
      console.log('Data ricevuta da Jira:', data);
      const projects: Partial<Project>[] = data.values.map((project: any) => ({
+      projectId: project.id,
       name: project.name,
       description: project.description || ''
      }));
