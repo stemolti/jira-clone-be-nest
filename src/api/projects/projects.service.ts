@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { Project } from './schemas/project.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { QueryProjectDTO } from './dto/query-project.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -25,22 +26,24 @@ export class ProjectsService {
   }
 
 
-  async getAllProjects(): Promise<Partial<Project>[]> {
+  async getAllProjects(query: QueryProjectDTO): Promise<Partial<Project>[]> {
     try {
       const projects = await this.projectModel.find().exec();
+
       if(projects && projects.length > 0){
         this.logger.log('Projects finded on DB');
         return projects
       }
       this.logger.log('No projects found in DB, fetching from Jira');
 
-      const jiraProjects = await this.fetchProjectsFromJira();
+      const jiraProjects = await this.fetchProjectsFromJira(query);
 
       if ( jiraProjects.length > 0) {
         await this.projectModel.insertMany(jiraProjects);
         this.logger.log(`Projects saved on DB: ${jiraProjects.length}`);
       }
-      return await this.projectModel.find().exec();
+
+    return await this.projectModel.find().exec();
     }catch (error) {
       this.logger.error('Error fetching projects', error);
       throw new InternalServerErrorException('Failed to fetch projects');
@@ -48,13 +51,31 @@ export class ProjectsService {
   }
 
 
-  private async fetchProjectsFromJira(): Promise<Partial<Project>[]> {
+  private async fetchProjectsFromJira(query: QueryProjectDTO): Promise<Partial<Project>[]> {
     const fetch = require('node-fetch');
 
-    const url = `${this.baseUrl}/rest/api/3/project/search`;
-    
+    const jiraApiUrl = `${this.baseUrl}/rest/api/3/project/search`;
+
+    const url = new URL (jiraApiUrl)
+
+    if(query.startAt){
+      url.searchParams.append('startAt', query.startAt.toString());
+    }
+
+    if(query.maxResults){
+      url.searchParams.append('maxResults', query.maxResults.toString());
+    }
+
+    if(query.orderBy){
+      url.searchParams.append('orderBy', query.orderBy);
+    }
+
+    if(query.query){
+      url.searchParams.append('query', query.query);
+    }
+
     try {
-     const response = await fetch(url, {
+     const response = await fetch(jiraApiUrl, {
       method: 'GET',
       headers: {
         'Authorization': this.authHeader,
