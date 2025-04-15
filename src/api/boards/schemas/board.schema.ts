@@ -11,7 +11,7 @@ export class Board {
   boardId: string;
 
   @Prop({ type: String, ref: Project.name, required: true})
-  projectId: string;
+  projectId?: string;
 
   @Prop()
   name: string;
