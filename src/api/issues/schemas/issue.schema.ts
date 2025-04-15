@@ -9,14 +9,14 @@ export type IssueDocument = HydratedDocument<Issue>;
 @Schema({ timestamps: true })
 export class Issue {
 
-  @Prop({ type: Types.ObjectId, ref: Project.name, required: true})
-  projectId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, required: true})
+  issueId: Types.ObjectId | Issue | string;
 
-  @Prop({ type: Types.ObjectId, ref: Release.name, required: true})
-  releaseId: Types.ObjectId;
+  @Prop({ type: String, ref: Project.name, required: true})
+  projectId: string;
 
-  @Prop({ type: Types.ObjectId, ref: Issue.name, required: true})
-  issueId: Types.ObjectId;
+  @Prop({ type: String, ref: Release.name, required: true})
+  releaseId: string;
 
   @Prop()
   name: string;

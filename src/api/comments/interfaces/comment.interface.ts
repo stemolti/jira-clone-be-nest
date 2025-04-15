@@ -3,7 +3,8 @@ import { User } from "@api/users/interfaces/user.interface";
 import { Types } from "mongoose";
 
 export interface Comment {
-  authorId: Types.ObjectId | User;
-  issueId: Types.ObjectId | Issue;
+  commentId: Types.ObjectId | Comment | string;
+  authorId: string;
+  issueId: string;
   content: string;
 }

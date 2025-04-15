@@ -4,9 +4,9 @@ import { Sprint } from '@api/sprints/interfaces/sprint.interface';
 import { Types } from 'mongoose';
 
 export interface Issue {
-  projectId: Types.ObjectId | Project;
-  releaseId: Types.ObjectId | Release;
-  issueId: Types.ObjectId | Issue;
+  projectId: string;
+  releaseId: string;
+  issueId: Types.ObjectId | Issue | string;
   name: string;
   description?: string;
   activeSprintId?: Types.ObjectId | Sprint;

@@ -6,6 +6,10 @@ export type SprintDpocument = HydratedDocument<Sprint>;
 
 @Schema({ timestamps: true })
 export class Sprint {
+
+  @Prop({ type: String, required: true })
+  sprintId: string;
+
   @Prop()
   name: string;
 

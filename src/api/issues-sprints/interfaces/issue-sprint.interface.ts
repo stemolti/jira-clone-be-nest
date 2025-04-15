@@ -4,6 +4,6 @@ import { Types } from "mongoose";
 
 
 export interface IssueSprint  {
-  issueId: Types.ObjectId | Issue;
-  sprintId: Types.ObjectId | Sprint;
+  issueId: string;
+  sprintId: string;
 }

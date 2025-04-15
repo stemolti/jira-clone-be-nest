@@ -13,7 +13,7 @@ export class BoardsService {
     
     constructor(
       private readonly configService: ConfigService,
-      @InjectModel(Board.name) private readonly projectModel: Model<Board>,
+      @InjectModel(Board.name) private readonly boardModel: Model<Board>,
     ) {
       this.baseUrl = this.configService.get<string>('JIRA_BASE_URL');
       const email = this.configService.get<string>('JIRA_EMAIL');
@@ -25,9 +25,17 @@ export class BoardsService {
   
     async getAllBoards(query: QueryBoardDTO): Promise<Partial<Board>[]> {
       try {
+        const boards = await this.boardModel.find().exec();
 
-  
-      return await this.projectModel.find().exec();
+        if(boards && boards.length > 0){
+          this.logger.log('Boards found on DB');
+          return boards
+        }
+        this.logger.log('No boards found in DB, fetching from Jira');
+
+        const jiraBoards = await this.fetchBoardsFromJira(query);
+        
+
       }catch (error) {
 
       }

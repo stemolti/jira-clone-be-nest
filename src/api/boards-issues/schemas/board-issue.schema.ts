@@ -7,11 +7,11 @@ export type BoardIssueDocument = HydratedDocument<BoardIssue>;
 
 @Schema({ timestamps: true })
 export class BoardIssue {
-  @Prop({ type: Types.ObjectId, ref: Board.name, required: true})
-  boardId: Types.ObjectId
+  @Prop({ type: String, ref: Board.name, required: true})
+  boardId: string
 
-  @Prop({ type: Types.ObjectId, ref: Issue.name, required: true})
-  issueId: Types.ObjectId
+  @Prop({ type: String, ref: Issue.name, required: true})
+  issueId: string
 }
 
 export const BoardIssueSchema = SchemaFactory.createForClass(BoardIssue)

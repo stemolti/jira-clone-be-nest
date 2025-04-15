@@ -7,11 +7,11 @@ export type ProjectDocument = HydratedDocument<Project>;
 @Schema({ timestamps: true })
 export class Project {
 
-  @Prop({ type: Types.ObjectId, ref: Project.name, required: true})
-  projectId: Types.ObjectId;
+  @Prop({ type: String, ref: Project.name, required: true})
+  projectId: string;
 
   @Prop({ type: Types.ObjectId, ref: User.name, required: true})
-  userId?: Types.ObjectId; 
+  userId?: Types.ObjectId | User | string; 
 
   @Prop()
   name: string;

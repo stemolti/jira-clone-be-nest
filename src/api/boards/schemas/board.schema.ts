@@ -7,17 +7,14 @@ export type BoardDocument = HydratedDocument<Board>;
 @Schema({ timestamps: true })
 export class Board {
 
-  @Prop({ type: Types.ObjectId, ref: Project.name, required: true})
-  projectId: Types.ObjectId;
+  @Prop({ type: String, required: true})
+  boardId: string;
 
-  @Prop({ type: Types.ObjectId, ref: Board.name, required: true})
-  boardId: Types.ObjectId; 
+  @Prop({ type: String, ref: Project.name, required: true})
+  projectId: string;
 
   @Prop()
   name: string;
-
-  @Prop()
-  description?: string;
 }
 
 export const BoardSchema = SchemaFactory.createForClass(Board);

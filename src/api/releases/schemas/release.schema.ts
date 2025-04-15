@@ -1,5 +1,6 @@
+import { Project } from "@api/projects/schemas/project.schema";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { HydratedDocument } from "mongoose";
+import { HydratedDocument, Types } from "mongoose";
 
 
 
@@ -8,7 +9,10 @@ export type ReleaseDocument = HydratedDocument<Release>;
 @Schema({ timestamps: true })
 export class Release {
 
-  @Prop()
+  @Prop({ type: String, required: true })
+  releaseId: string;
+
+  @Prop({ type: String, ref: Project.name , required: true })
   projectId: string;
 
   @Prop()

@@ -3,7 +3,8 @@ import { Type } from "@nestjs/common";
 import { Types } from "mongoose";
 
 export interface Release {
-  projectId: Types.ObjectId | Project;
+  releaseId: string;
+  projectId: string;
   name: string;
   status: string;
   releaseDate: Date;

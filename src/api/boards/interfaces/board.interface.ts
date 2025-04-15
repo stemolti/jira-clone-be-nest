@@ -3,7 +3,7 @@ import { Type } from "@nestjs/common";
 import { Types } from "mongoose";
 
 export interface Board {
-  projectId: Types.ObjectId | Project | string;
-  boardId: Types.ObjectId | Board | string;
+  projectId: string;
+  boardId: string;
   name: string;
 }
