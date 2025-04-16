@@ -6,16 +6,27 @@ import { HydratedDocument, Types } from "mongoose";
 
 export type IssueDocument = HydratedDocument<Issue>;
 
-@Schema({ timestamps: true })
+@Schema({
+  toJSON: {
+    virtuals: true,
+    transform: (_, ret) => {
+      ret.id = ret._id;
+      ret.v = ret.__v;
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    },
+  }, timestamps: true
+})
 export class Issue {
 
-  @Prop({ type: Types.ObjectId, required: true})
+  @Prop({ type: Types.ObjectId, required: true })
   issueId: Types.ObjectId | Issue | string;
 
-  @Prop({ type: String, ref: Project.name, required: true})
+  @Prop({ type: String, ref: Project.name, required: true })
   projectId: string;
 
-  @Prop({ type: String, ref: Release.name, required: true})
+  @Prop({ type: String, ref: Release.name, required: true })
   releaseId: string;
 
   @Prop()
@@ -24,7 +35,7 @@ export class Issue {
   @Prop()
   description?: string;
 
-  @Prop({ type: Types.ObjectId, ref: Sprint.name, required: true})
+  @Prop({ type: Types.ObjectId, ref: Sprint.name, required: true })
   activeSprintId?: Types.ObjectId;
 }
 

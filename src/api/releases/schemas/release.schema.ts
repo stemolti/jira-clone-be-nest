@@ -6,7 +6,16 @@ import { HydratedDocument, Types } from "mongoose";
 
 export type ReleaseDocument = HydratedDocument<Release>;
 
-@Schema({ timestamps: true })
+@Schema({  toJSON: {
+  virtuals: true,
+  transform: (_, ret) => {
+    ret.id = ret._id;
+    ret.v = ret.__v;
+    delete ret._id;
+    delete ret.__v;
+    return ret;
+  },
+}, timestamps: true })
 export class Release {
 
   @Prop({ type: String, required: true })
