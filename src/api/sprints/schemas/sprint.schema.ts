@@ -2,7 +2,7 @@ import { HydratedDocument } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 
 
-export type SprintDpocument = HydratedDocument<Sprint>;
+export type SprintDocument = HydratedDocument<Sprint>;
 
 @Schema({
   toJSON: {
@@ -21,7 +21,7 @@ export class Sprint {
   @Prop({ type: String, required: true })
   sprintId: string;
 
-  @Prop( { type: String, required: true })
+  @Prop({ type: String, required: true })
   name: string;
 
   @Prop()

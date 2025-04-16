@@ -89,7 +89,7 @@ export class ProjectsService {
      }
 
      const data = await response.json();
-     console.log('Data ricevuta da Jira:', data);
+     console.log('Data received from Jira:', data);
      const projects: Partial<Project>[] = data.values.map((project: any) => ({
       projectId: project.id,
       name: project.name,

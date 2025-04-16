@@ -21,7 +21,7 @@ export class IssuesService {
     const email = this.configService.get<string>('JIRA_EMAIL');
     const apiToken = this.configService.get<string>('JIRA_API_TOKEN');
     const encoded = Buffer.from(`${email}:${apiToken}`).toString('base64');
-    this.authHeader = `Basic ${encoded}`;
+    this.authHeader = `Bearer  ${encoded}`;
   }
 
   async getAllIssuesBySprint(sprintId: number, query: QueryIssueDTO): Promise<Partial<Issue>[]> {
