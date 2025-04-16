@@ -23,11 +23,9 @@ export class Issue {
   @Prop({ type: Types.ObjectId, required: true })
   issueId: Types.ObjectId | Issue | string;
 
-  @Prop({ type: String, ref: Project.name, required: true })
+  // For now projectId is not required, but optional
+  @Prop({ type: String, ref: Project.name })
   projectId: string;
-
-  @Prop({ type: String, ref: Release.name, required: true })
-  releaseId: string;
 
   @Prop()
   name: string;
@@ -35,8 +33,8 @@ export class Issue {
   @Prop()
   description?: string;
 
-  @Prop({ type: Types.ObjectId, ref: Sprint.name, required: true })
-  activeSprintId?: Types.ObjectId;
+  @Prop({ type: String, ref: Sprint.name })
+  sprintId: string;
 }
 
 export const IssueSchema = SchemaFactory.createForClass(Issue);
