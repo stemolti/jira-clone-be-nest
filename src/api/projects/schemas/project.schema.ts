@@ -10,7 +10,10 @@ export class Project {
   @Prop({ type: String, ref: Project.name, required: true})
   projectId: string;
 
-  @Prop({ type: Types.ObjectId, ref: User.name, required: true})
+  // For now userId is not required, but optional
+  // because we want to allow creating projects without a user
+  // This will be changed in the future
+  @Prop({ type: Types.ObjectId, ref: User.name})
   userId?: Types.ObjectId | User | string; 
 
   @Prop()

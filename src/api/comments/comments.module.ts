@@ -4,7 +4,7 @@ import { CommentsController } from './comments.controller';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { CommentSchema } from './schemas/comment.schema';
+import { Comment, CommentSchema } from './schemas/comment.schema';
 
 @Module({
   imports: [

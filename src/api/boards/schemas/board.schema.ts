@@ -10,7 +10,8 @@ export class Board {
   @Prop({ type: String, required: true})
   boardId: string;
 
-  @Prop({ type: String, ref: Project.name, required: true})
+  // For now projectId is not required, but optional
+  @Prop({ type: String, ref: Project.name})
   projectId?: string;
 
   @Prop()
