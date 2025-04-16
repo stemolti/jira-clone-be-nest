@@ -88,7 +88,7 @@ export class ProjectsService {
       throw new InternalServerErrorException('Failed to fetch projects from Jira');
      }
 
-     const data: any = await response.json();
+     const data = await response.json();
      console.log('Data ricevuta da Jira:', data);
      const projects: Partial<Project>[] = data.values.map((project: any) => ({
       projectId: project.id,

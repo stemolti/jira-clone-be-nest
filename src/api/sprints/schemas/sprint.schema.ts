@@ -21,17 +21,17 @@ export class Sprint {
   @Prop({ type: String, required: true })
   sprintId: string;
 
-  @Prop()
+  @Prop( { type: String, required: true })
   name: string;
 
   @Prop()
   state: string;
 
   @Prop()
-  startDate: Date;
+  startDate: string;
 
   @Prop()
-  endDate: Date;
+  endDate: string;
 
   @Prop()
   goal: string;

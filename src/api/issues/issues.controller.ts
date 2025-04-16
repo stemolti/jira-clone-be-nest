@@ -8,7 +8,7 @@ export class IssuesController {
   constructor(private readonly issuesService: IssuesService) { }
 
   @Get(':sprintId')
-  async getIssuesBySprintId(@Param('sprintId', ParseIntPipe) sprintId: number, @Query() query: QueryIssueDTO): Promise<Partial<Issue>[]> {
+  async getIssuesBySprint(@Param('sprintId', ParseIntPipe) sprintId: number, @Query() query: QueryIssueDTO): Promise<Partial<Issue>[]> {
     return this.issuesService.getAllIssuesBySprint(sprintId, query);
   }
 }
