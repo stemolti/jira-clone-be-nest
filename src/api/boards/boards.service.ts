@@ -83,9 +83,9 @@ export class BoardsService {
        console.log('Data received from Jira:', data);
        const boards: Partial<Board>[] = data.values.map((board: any) => ({
         boardId: board.id,
-        name: board.name,
+        projectId: query.projectKeyOrId,
+        name: board.name
        }));
-       //console.log('Progetti mappati:', projects);
        this.logger.log(` Mapped boards ${boards}`);
        return boards;
       } catch (error) {
