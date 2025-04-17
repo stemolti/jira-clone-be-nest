@@ -1,4 +1,4 @@
-import { IsInt, IsOptional } from "class-validator";
+import { IsInt, IsOptional, IsString } from "class-validator";
 
 export class QueryIssueDTO {
   @IsOptional()
@@ -8,4 +8,8 @@ export class QueryIssueDTO {
   @IsOptional()
   @IsInt()
   maxResults?: number;
+
+  @IsOptional()
+  @IsString()
+  jql?: string;
 }

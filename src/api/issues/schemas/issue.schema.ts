@@ -34,7 +34,7 @@ export class Issue {
   description: string;
 
   @Prop({ type: String, ref: Sprint.name })
-  sprintId: string;
+  sprintId?: string;
 }
 
 export const IssueSchema = SchemaFactory.createForClass(Issue);

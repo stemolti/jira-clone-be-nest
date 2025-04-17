@@ -5,5 +5,5 @@ export interface IIssue {
   projectId: string;
   name: string;
   description: string;
-  sprintId: string;
+  sprintId?: string;
 }
