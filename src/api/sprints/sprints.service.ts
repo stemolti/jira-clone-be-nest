@@ -24,7 +24,7 @@ export class SprintsService {
     this.authHeader = `Basic ${encoded}`;
   }
 
-  async getAllSprintsByBoard(boardId: number, query: QuerySprintDTO): Promise<Partial<ISprint>[]> {
+  async getAllSprintsByBoard(boardId: number, query: QuerySprintDTO) {
     try {
       const sprints = await this.sprintModel.find({ boardId: boardId }).exec();
 
@@ -49,7 +49,7 @@ export class SprintsService {
     }
   }
 
-  private async fetchSprintsFromJira(boardId: number, query: QuerySprintDTO): Promise<ISprint[]> {
+  private async fetchSprintsFromJira(boardId: number, query: QuerySprintDTO) {
 
     const fetch = require('node-fetch');
     const jiraApiUrl = `${this.baseUrl}/rest/agile/1.0/board/${boardId}/sprint`;
