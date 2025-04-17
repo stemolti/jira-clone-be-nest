@@ -4,6 +4,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Board } from './schemas/board.schema';
 import { QueryBoardDTO } from './dto/query-board.dto';
+import { IBoard } from './interfaces/board.interface';
+import { JiraBoardsResponse } from './interfaces/jira-board.interface';
 
 @Injectable()
 export class BoardsService {
@@ -23,7 +25,7 @@ export class BoardsService {
   }
 
 
-  async getAllBoards(query: QueryBoardDTO): Promise<Partial<Board>[]> {
+  async getAllBoards(query: QueryBoardDTO) {
     try {
       const boards = await this.boardModel.find().exec();
 
@@ -36,8 +38,9 @@ export class BoardsService {
       const jiraBoards = await this.fetchBoardsFromJira(query);
 
       if (jiraBoards.length > 0) {
-        await this.boardModel.insertMany(jiraBoards);
+        const boards = await this.boardModel.insertMany(jiraBoards);
         this.logger.log(`Boards saved on DB: ${jiraBoards.length}`)
+        return boards;
       }
     } catch (error) {
 
@@ -45,7 +48,7 @@ export class BoardsService {
   }
 
 
-  private async fetchBoardsFromJira(query: QueryBoardDTO): Promise<Partial<Board>[]> {
+  private async fetchBoardsFromJira(query: QueryBoardDTO) {
     const fetch = require('node-fetch');
 
     const jiraApiUrl = `${this.baseUrl}/rest/agile/1.0/board`;
@@ -69,7 +72,7 @@ export class BoardsService {
     }
 
     try {
-      const response = await fetch(jiraApiUrl, {
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           'Authorization': this.authHeader,
@@ -82,9 +85,9 @@ export class BoardsService {
         throw new InternalServerErrorException('Failed to fetch boards from Jira');
       }
 
-      const data: any = await response.json();
+      const data: JiraBoardsResponse = await response.json();
       console.log('Data received from Jira:', data);
-      const boards: Partial<Board>[] = data.values.map((board: any) => ({
+      const boards: IBoard[] = data.values.map((board) => ({
         boardId: board.id,
         projectId: query.projectKeyOrId,
         name: board.name

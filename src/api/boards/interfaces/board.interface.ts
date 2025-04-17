@@ -1,9 +1,5 @@
-import { Project } from "@api/projects/interfaces/project.interface";
-import { Type } from "@nestjs/common";
-import { Types } from "mongoose";
-
-export interface Board {
-  boardId: string;
-  projectId?: string;
+export interface IBoard {
+  boardId: number;
+  projectId: string;
   name: string;
 }

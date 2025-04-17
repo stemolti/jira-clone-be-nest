@@ -1,9 +1,9 @@
 import { Types } from 'mongoose';
 
-export interface Issue {
-  issueId: Types.ObjectId | Issue | string;
+export interface IIssue {
+  issueId: Types.ObjectId | IIssue | string;
   projectId: string;
   name: string;
-  description?: string;
+  description: string;
   sprintId: string;
 }

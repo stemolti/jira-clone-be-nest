@@ -31,7 +31,7 @@ export class Project {
   name: string;
 
   @Prop()
-  description?: string;
+  description: string;
 }
 
 export const ProjectSchema = SchemaFactory.createForClass(Project);

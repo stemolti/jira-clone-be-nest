@@ -3,17 +3,17 @@ export interface JiraSprintsResponse {
   maxResults: number
   startAt: number
   total: number
-  values: JiraSprint[]
+  values: IJiraSprint[]
 }
 
-export interface JiraSprint {
+export interface IJiraSprint {
   id: number
   self: string
   state: string
   name: string
-  startDate?: string
-  endDate?: string
-  completeDate?: string
-  originBoardId?: number
+  startDate: string
+  endDate: string
+  completeDate: string
+  originBoardId: number
   goal: string
 }

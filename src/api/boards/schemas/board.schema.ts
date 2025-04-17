@@ -18,12 +18,11 @@ export type BoardDocument = HydratedDocument<Board>;
 })
 export class Board {
 
-  @Prop({ type: String, required: true })
-  boardId: string;
+  @Prop({ type: Number, required: true })
+  boardId: number;
 
-  // For now projectId is not required, but optional
   @Prop({ type: String, ref: Project.name })
-  projectId?: string;
+  projectId: string;
 
   @Prop()
   name: string;

@@ -10,7 +10,7 @@ export class ProjectsController {
   constructor(private projectsService: ProjectsService) { }
 
   @Get()
-  async getProjects(@Query() query: QueryProjectDTO): Promise<Partial<Project>[]> {
+  async getProjects(@Query() query: QueryProjectDTO) {
     return this.projectsService.getAllProjects(query);
   }
 }

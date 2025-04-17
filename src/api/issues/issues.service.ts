@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import { QueryIssueDTO } from './dto/query-issue.dto';
+import { IIssue } from './interfaces/issue.interface';
+import { JiraIssuesResponse } from './interfaces/jira-issue.interface';
 
 @Injectable()
 export class IssuesService {
@@ -12,19 +14,17 @@ export class IssuesService {
   private readonly authHeader: string;
 
   constructor(
-    //private readonly httpService: HttpService,
     private readonly configService: ConfigService,
-    //private readonly projectsService: ProjectsService
     @InjectModel(Issue.name) private readonly issueModel: Model<Issue>,
   ) {
     this.baseUrl = this.configService.get<string>('JIRA_BASE_URL');
     const email = this.configService.get<string>('JIRA_EMAIL');
     const apiToken = this.configService.get<string>('JIRA_API_TOKEN');
     const encoded = Buffer.from(`${email}:${apiToken}`).toString('base64');
-    this.authHeader = `Bearer  ${encoded}`;
+    this.authHeader = `Basic  ${encoded}`;
   }
 
-  async getAllIssuesBySprint(sprintId: number, query: QueryIssueDTO): Promise<Partial<Issue>[]> {
+  async getAllIssuesBySprint(sprintId: string, query: QueryIssueDTO) {
     try {
       const issues = await this.issueModel.find({ sprintId }).exec();
 
@@ -48,7 +48,7 @@ export class IssuesService {
     }
   }
 
-  private async fetchIssuesFromJira(sprintId: number, query: QueryIssueDTO): Promise<Partial<Issue>[]> {
+  private async fetchIssuesFromJira(sprintId: string, query: QueryIssueDTO) {
     const fetch = require('node-fetch');
     const jiraApiUrl = `${this.baseUrl}/rest/agile/1.0/sprint/${sprintId}/issue`;
     const url = new URL(jiraApiUrl);
@@ -75,13 +75,13 @@ export class IssuesService {
         throw new InternalServerErrorException(`Failed to fetch issues from Jira: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data: JiraIssuesResponse = await response.json();
 
-      const issues = data.issues.map((issue: any) => ({
+      const issues: IIssue[] = data.issues.map((issue) => ({
         issueId: issue.id,
         projectId: issue.fields.project.id,
         name: issue.key,
-        description: issue.fields.description || '',
+        description: issue.fields.description,
         sprintId: sprintId
       }));
 
