@@ -3,8 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { QuerySprintDTO } from './dto/query-sprint.dto';
-import { Sprint as ISprint } from './interfaces/sprint.interface';
 import { Sprint } from './schemas/sprint.schema';
+import { ISprint } from './interfaces/sprint.interface';
+import { JiraSprintsResponse } from './interfaces/jira-sprint.interface';
 
 @Injectable()
 export class SprintsService {
@@ -25,7 +26,7 @@ export class SprintsService {
 
   async getAllSprintsByBoard(boardId: number, query: QuerySprintDTO): Promise<Partial<ISprint>[]> {
     try {
-      const sprints = await this.sprintModel.find({ boardId }).exec();
+      const sprints = await this.sprintModel.find({ boardId: boardId }).exec();
 
       if (sprints && sprints.length > 0) {
         this.logger.log('Sprints found on DB');
@@ -38,16 +39,17 @@ export class SprintsService {
       if (jiraSprints.length > 0) {
         await this.sprintModel.insertMany(jiraSprints);
         this.logger.log(`Sprints saved on DB: ${jiraSprints.length}`);
+        const sprints = await this.sprintModel.find({ boardId }).exec();
+        return sprints;
       }
 
-      return await this.sprintModel.find({ boardId }).exec();
     } catch (error) {
       this.logger.error('Error fetching sprints', error);
       throw new InternalServerErrorException('Failed to fetch sprints');
     }
   }
 
-  private async fetchSprintsFromJira(boardId: number, query: QuerySprintDTO): Promise<Partial<ISprint>[]> {
+  private async fetchSprintsFromJira(boardId: number, query: QuerySprintDTO): Promise<ISprint[]> {
 
     const fetch = require('node-fetch');
     const jiraApiUrl = `${this.baseUrl}/rest/agile/1.0/board/${boardId}/sprint`;
@@ -79,12 +81,13 @@ export class SprintsService {
         throw new InternalServerErrorException(`Failed to fetch sprints from Jira: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data: JiraSprintsResponse = await response.json();
 
       console.log('Data received from', data);
 
-      const sprints: Partial<Sprint>[] = data.values.map((sprint: any) => ({
+      const sprints: ISprint[] = data.values.map((sprint) => ({
         sprintId: sprint.id,
+        boardId: boardId,
         name: sprint.name,
         state: sprint.state,
         startDate: sprint.startDate,
@@ -95,7 +98,7 @@ export class SprintsService {
       this.logger.log(`Fetched ${sprints.length} sprints from Jira`);
       this.logger.log(` Mapped sprints ${sprints}`);
 
-      return Promise.resolve(sprints);
+      return sprints;
 
     } catch (error) {
       this.logger.error('Error fetching sprints from Jira', error);

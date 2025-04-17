@@ -18,8 +18,11 @@ export type SprintDocument = HydratedDocument<Sprint>;
 })
 export class Sprint {
 
-  @Prop({ type: String, required: true })
-  sprintId: string;
+  @Prop({ type: Number, required: true })
+  sprintId: number;
+
+  @Prop({ type: Number, required: true })
+  boardId: number;
 
   @Prop({ type: String, required: true })
   name: string;
