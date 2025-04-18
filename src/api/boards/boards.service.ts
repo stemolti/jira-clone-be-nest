@@ -49,7 +49,6 @@ export class BoardsService {
 
 
   private async fetchBoardsFromJira(query: QueryBoardDTO) {
-    const fetch = require('node-fetch');
 
     const jiraApiUrl = `${this.baseUrl}/rest/agile/1.0/board`;
 

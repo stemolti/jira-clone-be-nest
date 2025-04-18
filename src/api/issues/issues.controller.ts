@@ -8,14 +8,4 @@ import { CacheInterceptor } from '@nestjs/cache-manager';
 @UseInterceptors(CacheInterceptor)
 export class IssuesController {
   constructor(private readonly issuesService: IssuesService) { }
-
-  @Get(':sprintId')
-  async getIssuesBySprint(@Param('sprintId') sprintId: string, @Query() query: QueryIssueDTO) {
-    return this.issuesService.getAllIssuesBySprint(sprintId, query);
-  }
-
-  @Get(':projectId')
-  async getIssuesByProject(@Param('projectId') projectId: string, @Query() query: QueryIssueDTO) {
-    return this.issuesService.getAllIssuesByProject(projectId, query);
-  }
 }

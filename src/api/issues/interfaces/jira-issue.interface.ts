@@ -1,5 +1,3 @@
-
-
 export interface JiraIssuesResponse {
   issues: IJiraIssue[]
   startAt: number
@@ -16,7 +14,7 @@ export interface IJiraIssue {
 export interface Fields {
   sprint: Sprint
   closedSprints: ClosedSprint[]
-  description: string
+  description: Description
   project: IJiraProject
   comment: IJiraComment[]
   updated: number
@@ -56,7 +54,7 @@ export interface Author {
   displayName: string
 }
 
-export interface Body {
+export interface Description {
   type: string
   content: Content[]
 }
