@@ -6,6 +6,9 @@ export class CreateIssueDTO {
   boardId: string;
 
   @IsString()
+  projectId: string;
+
+  @IsString()
   @IsNotEmpty()
   name: string;
 

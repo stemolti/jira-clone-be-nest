@@ -135,8 +135,6 @@ export class ProjectsService {
   }
 
   private async fetchIssuesFromJiraByProject(projectId: string, query: QueryIssueDTO) {
-
-    const fetch = require('node-fetch');
     const jiraApiUrl = `${this.baseUrl}/rest/api/3/search`;
     const url = new URL(jiraApiUrl);
 
@@ -174,7 +172,7 @@ export class ProjectsService {
         issueId: issue.id,
         projectId: issue.fields.project.id,
         name: issue.key,
-        description: issue.fields.description.content.map((c) => c.content.map((c) => c.text).join('')).join('')
+        description: issue.fields.description?.content?.map((c) => c.content?.map((c) => c.text).join('')).join('')
       }));
 
       this.logger.log(`Issues fetched from Jira: ${issues.length}`);

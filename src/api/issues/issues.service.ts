@@ -4,6 +4,7 @@ import { Issue } from './schemas/issue.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateIssueDTO } from './dto/create-issue.dto';
+import { JiraConfigIssueResponse } from './interfaces/jira-config-issue.interface';
 
 @Injectable()
 export class IssuesService {
@@ -25,25 +26,26 @@ export class IssuesService {
 
   async createIssue(createDTO: CreateIssueDTO) {
     try {
+      console.log('>>>>>>>>>>');
       const issue = await this.createIssueOnJira(createDTO);
 
       if (!issue) {
-        throw new InternalServerErrorException('Impossibile creare l\'issue su Jira');
+        this.logger.log('Impossibile creare l\'issue su Jira');
       }
 
       return issue;
     } catch (error) {
-      this.logger.error(`Error creating issue: ${error.message}`);
-      throw new InternalServerErrorException('Errore durante la creazione dell\'issue');
+      this.logger.log(`Errore durante la creazione dell\'issue: ${error.message}`);
     }
   }
 
   private async createIssueOnJira(createDTO: CreateIssueDTO) {
+    console.log('>>>>>>>');
+
     const jiraApiUrl = `${this.baseUrl}/rest/api/3/issue`;
     const issueConfigUrl = `${this.baseUrl}/rest/agile/1.0/board/${createDTO.boardId}/configuration`;
 
     const issueConfigRes = await fetch(issueConfigUrl, {
-      method: 'GET',
       headers: {
         Authorization: this.authHeader,
         Accept: 'application/json',
@@ -57,9 +59,9 @@ export class IssuesService {
       throw new InternalServerErrorException('Impossibile recuperare configurazione board');
     }
 
-    const data = await issueConfigRes.json();
+    const data: JiraConfigIssueResponse = await issueConfigRes.json();
 
-    const columnNames: string[] = data.columns.map(c => c.name);
+    const columnNames: string[] = data.columnConfig.columns.map((column) => column.name);
 
     if (!columnNames.includes('To Do')) {
       throw new NotFoundException(
@@ -67,28 +69,32 @@ export class IssuesService {
       );
     }
 
-
     const issueBody = {
       fields: {
-        summary: createDTO.name,
         description: {
           content: [
             {
               content: [
                 {
                   text: createDTO.description || '',
+                  type: "text"
                 }
               ],
+              type: "paragraph"
             }
           ],
+          type: "doc",
+          version: 1
         },
-        status: {
-          name: "To Do",
-        }
+        issuetype: {
+          name: "Task"
+        },
+        project: {
+          id: createDTO.projectId
+        },
+        summary: createDTO.name
       }
-
     };
-
 
     try {
       const response = await fetch(jiraApiUrl, {
