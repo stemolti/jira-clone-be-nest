@@ -10,7 +10,7 @@ export class CreateIssueDTO {
 
   @IsString()
   @IsNotEmpty()
-  name: string;
+  summary: string;
 
   @IsString()
   @IsOptional()

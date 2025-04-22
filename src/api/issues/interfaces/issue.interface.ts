@@ -4,7 +4,7 @@ export interface IIssue {
   issueId: Types.ObjectId | IIssue | string;
   projectId: string;
   boardId?: string;
-  name: string;
+  summary: string;
   description: string;
   sprintId?: string;
 }

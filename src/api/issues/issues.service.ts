@@ -5,6 +5,7 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateIssueDTO } from './dto/create-issue.dto';
 import { JiraConfigIssueResponse } from './interfaces/jira-config-issue.interface';
+import { UpdateIssueDTO } from './dto/update-issue.dto';
 
 @Injectable()
 export class IssuesService {
@@ -26,7 +27,6 @@ export class IssuesService {
 
   async createIssue(createDTO: CreateIssueDTO) {
     try {
-      console.log('>>>>>>>>>>');
       const issue = await this.createIssueOnJira(createDTO);
 
       if (!issue) {
@@ -40,8 +40,6 @@ export class IssuesService {
   }
 
   private async createIssueOnJira(createDTO: CreateIssueDTO) {
-    console.log('>>>>>>>');
-
     const jiraApiUrl = `${this.baseUrl}/rest/api/3/issue`;
     const issueConfigUrl = `${this.baseUrl}/rest/agile/1.0/board/${createDTO.boardId}/configuration`;
 
@@ -92,7 +90,7 @@ export class IssuesService {
         project: {
           id: createDTO.projectId
         },
-        summary: createDTO.name
+        summary: createDTO.summary
       }
     };
 
@@ -118,6 +116,65 @@ export class IssuesService {
     } catch (error) {
       this.logger.error(`Error creating issue on Jira: ${error.message}`);
       return null;
+    }
+  }
+
+  async updateIssue(issueId: string, updateDTO: UpdateIssueDTO) {
+    try {
+      const issue = await this.editIssueOnJira(issueId, updateDTO);
+
+      if (!issue) {
+        this.logger.log('Impossibile aggiornare l\'issue');
+      }
+    this.logger.log(`Issue updated: ${issueId}`);
+    } catch (error) {
+      this.logger.log(`Errore durante l\'aggiornamento dell\'issue: ${error.message}`);
+    }
+  }
+
+
+  private async editIssueOnJira(issueId: string, updateDTO: UpdateIssueDTO) {
+    const jiraApiUrl = `${this.baseUrl}/rest/api/3/issue/${issueId}`;
+
+    const issueBody = {
+      fields: {
+        description: {
+          content: [
+            {
+              content: [
+                {
+                  text: updateDTO.description || ''
+                }
+              ]
+            }
+          ]
+        },
+        summary: updateDTO.summary
+      }
+    };
+
+    try {
+      const response = await fetch(jiraApiUrl, {
+        method: ' PUT',
+        headers: {
+          'Authorization': this.authHeader,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(issueBody),
+      });
+
+      if (!response.ok) {
+        this.logger.error(`Failed to update issue on Jira: ${response.statusText}`);
+        return null;
+      }
+
+      const data = await response.json();
+      this.logger.log(`Issue updated on Jira: ${issueId}`);
+
+      return data;
+    } catch (error) {
+
     }
   }
 }
