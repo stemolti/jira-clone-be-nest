@@ -126,7 +126,7 @@ export class IssuesService {
       if (!issue) {
         this.logger.log('Impossibile aggiornare l\'issue');
       }
-    this.logger.log(`Issue updated: ${issueId}`);
+      this.logger.log(`Issue updated: ${issueId}`);
     } catch (error) {
       this.logger.log(`Errore durante l\'aggiornamento dell\'issue: ${error.message}`);
     }
@@ -138,20 +138,24 @@ export class IssuesService {
 
     const issueBody = {
       fields: {
+        summary: updateDTO.summary,
         description: {
+          type: "doc",
+          version: 1,
           content: [
             {
+              type: "paragraph",
               content: [
                 {
-                  text: updateDTO.description || ''
+                  type: "text",
+                  text: updateDTO.description
                 }
               ]
             }
           ]
-        },
-        summary: updateDTO.summary
+        }
       }
-    };
+    }
 
     try {
       const response = await fetch(jiraApiUrl, {
@@ -174,7 +178,8 @@ export class IssuesService {
 
       return data;
     } catch (error) {
-
+      this.logger.error(`Error updating issue on Jira: ${error.message}`);
+      return null
     }
   }
 }
