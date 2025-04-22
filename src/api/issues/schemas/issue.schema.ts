@@ -28,7 +28,7 @@ export class Issue {
   projectId: string;
 
   @Prop()
-  name: string;
+  summary: string;
 
   @Prop()
   description: string;
