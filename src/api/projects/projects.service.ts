@@ -10,6 +10,7 @@ import { IIssue } from '@api/issues/interfaces/issue.interface';
 import { JiraIssuesResponse } from '@api/issues/interfaces/jira-issue.interface';
 import { QueryIssueDTO } from '@api/issues/dto/query-issue.dto';
 import { Issue } from '@api/issues/schemas/issue.schema';
+import { QueryReleaseDTO } from '@api/releases/dto/query-release.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -183,4 +184,57 @@ export class ProjectsService {
     }
   }
 
+
+  async getAllReleasesByProject(projectId: string, query: QueryReleaseDTO) {
+    try {
+      const releases = await this.fetchReleasesFromJiraByProject(projectId, query);
+      return releases;
+    } catch (error) {
+      this.logger.error('Error fetching releases', error);
+      throw new InternalServerErrorException('Failed to fetch releases');
+    }
+  }
+
+
+  private async fetchReleasesFromJiraByProject(projectId: string, query: QueryReleaseDTO) {
+    const jiraApiUrl = `${this.baseUrl}/rest/api/3/project/${projectId}/versions`;
+    const url = new URL(jiraApiUrl);
+
+    if (query.startAt) {
+      url.searchParams.append('startAt', query.startAt.toString());
+    }
+
+    if (query.maxResults) {
+      url.searchParams.append('maxResults', query.maxResults.toString());
+    }
+
+    if (query.orderBy) {
+      url.searchParams.append('orderBy', query.orderBy);
+    }
+
+    if (query.query) {
+      url.searchParams.append('query', query.query);
+    }
+
+    try {
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'Authorization': this.authHeader,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        this.logger.error(`Error fetching releases from Jira: ${response.statusText}`);
+        throw new InternalServerErrorException('Failed to fetch releases from Jira');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      this.logger.error('Error fetching releases from Jira', error);
+      throw new InternalServerErrorException('Failed to fetch releases from Jira');
+    }
+  }
 }
