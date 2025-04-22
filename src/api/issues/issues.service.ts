@@ -159,7 +159,7 @@ export class IssuesService {
 
     try {
       const response = await fetch(jiraApiUrl, {
-        method: ' PUT',
+        method: 'PUT',
         headers: {
           'Authorization': this.authHeader,
           'Accept': 'application/json',
@@ -173,7 +173,7 @@ export class IssuesService {
         return null;
       }
 
-      const data = await response.json();
+      const data = await response.statusText;
       this.logger.log(`Issue updated on Jira: ${issueId}`);
 
       return data;

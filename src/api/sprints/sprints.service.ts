@@ -166,7 +166,7 @@ export class SprintsService {
       const issues: IIssue[] = data.issues.map((issue) => ({
         issueId: issue.id,
         projectId: issue.fields.project.id,
-        name: issue.key,
+        summary: issue.key,
         description: issue.fields.description.content.map((c) => c.content.map((c) => c.text).join('')).join(''),
         sprintId: sprintId
       }));
