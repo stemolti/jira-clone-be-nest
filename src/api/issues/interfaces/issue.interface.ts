@@ -7,5 +7,6 @@ export interface IIssue {
   boardId?: string;
   summary: string;
   description: string;
+  status: string;
   sprintId?: string;
 }

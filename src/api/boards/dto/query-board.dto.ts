@@ -1,19 +1,19 @@
-import { IsOptional, IsInt, IsString, IsArray, ArrayNotEmpty, ArrayUnique } from 'class-validator';
+import { IsOptional, IsInt, IsString, ArrayNotEmpty, ArrayUnique } from 'class-validator';
 
 export class QueryBoardDTO {
   @IsOptional()
   @IsInt()
-  startAt?: number;
+  startAt: number;
 
   @IsOptional()
   @IsInt()
-  maxResults?: number;
+  maxResults: number;
 
   @IsOptional()
   @IsString()
-  orderBy?: string;
+  name: string;
 
   @IsOptional()
   @IsString()
-  projectKeyOrId?: string;
+  projectKeyOrId: string;
 }

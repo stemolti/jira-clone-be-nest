@@ -11,6 +11,7 @@ import { JiraIssuesResponse } from '@api/issues/interfaces/jira-issue.interface'
 import { QueryIssueDTO } from '@api/issues/dto/query-issue.dto';
 import { Issue } from '@api/issues/schemas/issue.schema';
 import { QueryReleaseDTO } from '@api/releases/dto/query-release.dto';
+import { stat } from 'fs';
 
 @Injectable()
 export class ProjectsService {
@@ -70,10 +71,6 @@ export class ProjectsService {
 
     if (query.maxResults) {
       url.searchParams.append('maxResults', query.maxResults.toString());
-    }
-
-    if (query.orderBy) {
-      url.searchParams.append('orderBy', query.orderBy);
     }
 
     if (query.query) {
@@ -173,7 +170,8 @@ export class ProjectsService {
         issueId: issue.id,
         projectId: issue.fields.project.id,
         summary: issue.key,
-        description: issue.fields.description?.content?.map((c) => c.content?.map((c) => c.text).join('')).join('')
+        description: issue.fields.description?.content.map((content) => content.content.map((c) => c.text).join(' ')).join(' '),
+        status: issue.fields.status.name,
       }));
 
       this.logger.log(`Issues fetched from Jira: ${issues.length}`);

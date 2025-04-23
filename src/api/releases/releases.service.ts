@@ -4,6 +4,7 @@ import { Issue } from '@api/issues/schemas/issue.schema';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
+import { stat } from 'fs';
 import { Model } from 'mongoose';
 
 @Injectable()
@@ -74,7 +75,9 @@ export class ReleasesService {
         releaseId: releaseId,
         projectId: issue.fields.project.id,
         summary: issue.key,
-        description: issue.fields.description?.content?.map((c) => c.content?.map((c) => c.text).join('')).join('')
+        description: issue.fields.description?.content?.map((content) => content?.content?.map((c) => c.text).join(' ')).join(' '),
+        status: issue.fields.status.name,
+        sprintId: issue.fields.sprint?.id,
       }));
       return issues;
     } catch (error) {

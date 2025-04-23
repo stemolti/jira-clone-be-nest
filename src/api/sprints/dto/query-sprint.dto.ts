@@ -1,4 +1,4 @@
-import { IsInt, IsOptional } from "class-validator";
+import { IsInt, IsOptional, IsString } from "class-validator";
 
 export class QuerySprintDTO {
   @IsOptional()
@@ -10,5 +10,6 @@ export class QuerySprintDTO {
   maxResults?: number;
 
   @IsOptional()
-  state?: any
+  @IsString()
+  state?: any;
 }

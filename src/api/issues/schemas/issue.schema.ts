@@ -33,6 +33,9 @@ export class Issue {
   @Prop()
   description: string;
 
+  @Prop()
+  status: string;
+
   @Prop({ type: String, ref: Sprint.name })
   sprintId?: string;
 }

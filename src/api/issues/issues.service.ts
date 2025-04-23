@@ -127,6 +127,7 @@ export class IssuesService {
         this.logger.log('Impossibile aggiornare l\'issue');
       }
       this.logger.log(`Issue updated: ${issueId}`);
+      return issue;
     } catch (error) {
       this.logger.log(`Errore durante l\'aggiornamento dell\'issue: ${error.message}`);
     }

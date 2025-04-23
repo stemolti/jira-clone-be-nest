@@ -8,8 +8,8 @@ import { ISprint } from './interfaces/sprint.interface';
 import { JiraSprintsResponse } from './interfaces/jira-sprint.interface';
 import { Issue } from '@api/issues/schemas/issue.schema';
 import { QueryIssueDTO } from '@api/issues/dto/query-issue.dto';
-import { JiraIssuesResponse } from '@api/issues/interfaces/jira-issue.interface';
 import { IIssue } from '@api/issues/interfaces/issue.interface';
+import { JiraIssuesResponse } from '@api/issues/interfaces/jira-issue.interface';
 
 @Injectable()
 export class SprintsService {
@@ -101,8 +101,6 @@ export class SprintsService {
       }));
 
       this.logger.log(`Fetched ${sprints.length} sprints from Jira`);
-      this.logger.log(` Mapped sprints ${sprints}`);
-
       return sprints;
 
     } catch (error) {
@@ -167,7 +165,8 @@ export class SprintsService {
         issueId: issue.id,
         projectId: issue.fields.project.id,
         summary: issue.key,
-        description: issue.fields.description.content.map((c) => c.content.map((c) => c.text).join('')).join(''),
+        description: issue.fields.description?.content.map((content) => content.content.map((c) => c.text).join(' ')).join(' '),
+        status: issue.fields.status.name,
         sprintId: sprintId
       }));
 

@@ -12,9 +12,5 @@ export class QueryProjectDTO {
 
   @IsOptional()
   @IsString()
-  orderBy?: string;
-
-  @IsOptional()
-  @IsString()
   query?: string;
 }

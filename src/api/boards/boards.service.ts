@@ -62,8 +62,8 @@ export class BoardsService {
       url.searchParams.append('maxResults', query.maxResults.toString());
     }
 
-    if (query.orderBy) {
-      url.searchParams.append('orderBy', query.orderBy);
+    if( query.name) {
+      url.searchParams.append('name', query.name);
     }
 
     if (query.projectKeyOrId) {
@@ -88,7 +88,6 @@ export class BoardsService {
       console.log('Data received from Jira:', data);
       const boards: IBoard[] = data.values.map((board) => ({
         boardId: board.id,
-        projectId: query.projectKeyOrId,
         name: board.name
       }));
       this.logger.log(` Mapped boards ${boards}`);
