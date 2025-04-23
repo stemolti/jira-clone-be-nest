@@ -20,4 +20,8 @@ export class QueryReleaseDTO {
   @IsOptional()
   @IsString()
   released: boolean;
+
+  @IsOptional()
+  @IsString()
+  jql: string;
 }
