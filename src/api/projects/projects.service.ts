@@ -170,7 +170,7 @@ export class ProjectsService {
         issueId: issue.id,
         projectId: issue.fields.project.id,
         summary: issue.key,
-        description: issue.fields.description?.content.map((content) => content.content.map((c) => c.text).join(' ')).join(' '),
+        description: issue.fields.description?.content?.map((content) => content?.content?.map((c) => c.text).join(' ')).join(' '),
         status: issue.fields.status.name,
       }));
 
