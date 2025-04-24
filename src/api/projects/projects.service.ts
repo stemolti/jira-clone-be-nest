@@ -71,23 +71,7 @@ export class ProjectsService {
     const url = new URL(jiraApiUrl)
 
     try {
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Authorization': this.authHeader,
-          'Accept': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        this.logger.error(`Error first fetching projects from Jira: ${response.statusText}`);
-      }
-
-      const data: JiraProjectsResponse = await response.json();
-
-      console.log('Data received from Jira:', data);
-
-      let remained: number = data.total
+      let remained: number = -1;
 
       do {
 
@@ -122,6 +106,10 @@ export class ProjectsService {
 
         const nextData: JiraProjectsResponse = await nextResponse.json();
 
+        if (remained < 0) {
+          remained = nextData.total
+        }
+
         console.log('Data received from Jira:', nextData);
 
         projects.push(...nextData.values.map((project) => ({
@@ -130,10 +118,10 @@ export class ProjectsService {
           description: project.description || ''
         })));
 
-        query.startAt += query.maxResults;
-        remained -= query.maxResults;
+        query.startAt += nextData.values.length;
+        remained -= nextData.values.length;
 
-      } while (query.startAt < remained + data.total - 1)
+      } while (remained > 0);
 
       return projects;
     } catch (error) {

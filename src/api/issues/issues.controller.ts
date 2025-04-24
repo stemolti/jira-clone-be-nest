@@ -6,18 +6,18 @@ import { CacheInterceptor } from '@nestjs/cache-manager';
 import { CreateIssueDTO } from './dto/create-issue.dto';
 import { UpdateIssueDTO } from './dto/update-issue.dto';
 
-@Controller('issues')
+@Controller('projects')
 @UseInterceptors(CacheInterceptor)
 export class IssuesController {
   constructor(private readonly issuesService: IssuesService) { }
 
-  @Post()
+  @Post('issues')
   async create(@Body() createDTO: CreateIssueDTO) {
     return this.issuesService.createIssue(createDTO);
   }
 
-  @Put(':issueId')
-  async update(@Param('issueId') issueId: string, @Body() updateDTO: UpdateIssueDTO) {
-    return this.issuesService.updateIssue(issueId, updateDTO);
+  @Put(':projectId/issues/:issueId')
+  async update(@Param('projectId') projectId: string , @Param('issueId') issueId: string, @Body() updateDTO: UpdateIssueDTO) {
+    return this.issuesService.updateIssue(projectId, issueId, updateDTO);
   }
 }

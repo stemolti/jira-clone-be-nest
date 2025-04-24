@@ -16,9 +16,4 @@ export class ProjectsController {
     console.log(typeof query.maxResults);
     return this.projectsService.getAllProjects(query);
   }
-
-  @Get(':projectId/issues')
-  async getIssuesByProject(@Param('projectId') projectId: string, @Query() query: QueryIssueDTO) {
-    return this.projectsService.getAllIssuesByProject(projectId, query);
-  }
 }

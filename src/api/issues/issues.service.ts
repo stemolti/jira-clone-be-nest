@@ -119,9 +119,9 @@ export class IssuesService {
     }
   }
 
-  async updateIssue(issueId: string, updateDTO: UpdateIssueDTO) {
+  async updateIssue(projectId: string, issueId: string, updateDTO: UpdateIssueDTO) {
     try {
-      const issue = await this.editIssueOnJira(issueId, updateDTO);
+      const issue = await this.editIssueOnJira(projectId, issueId, updateDTO);
 
       if (!issue) {
         this.logger.log('Impossibile aggiornare l\'issue');
@@ -134,7 +134,7 @@ export class IssuesService {
   }
 
 
-  private async editIssueOnJira(issueId: string, updateDTO: UpdateIssueDTO) {
+  private async editIssueOnJira(projectId: string, issueId: string, updateDTO: UpdateIssueDTO) {
     const jiraApiUrl = `${this.baseUrl}/rest/api/3/issue/${issueId}`;
 
     const issueBody = {
