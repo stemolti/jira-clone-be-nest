@@ -12,6 +12,7 @@ import { QueryIssueDTO } from '@api/issues/dto/query-issue.dto';
 import { Issue } from '@api/issues/schemas/issue.schema';
 import { QueryReleaseDTO } from '@api/releases/dto/query-release.dto';
 import { stat } from 'fs';
+import { parse } from 'path';
 
 @Injectable()
 export class ProjectsService {
@@ -66,7 +67,7 @@ export class ProjectsService {
     const url = new URL(jiraApiUrl)
 
     if (query.startAt) {
-      url.searchParams.append('startAt', query.startAt.toString());
+      url.searchParams.set('startAt', query.startAt.toString());
     }
 
     if (query.maxResults) {
@@ -91,13 +92,60 @@ export class ProjectsService {
         throw new InternalServerErrorException('Failed to fetch projects from Jira');
       }
 
-      const data: JiraProjectsResponse = await response.json();
-      console.log('Data received from Jira:', data);
-      const projects: IProject[] = data.values.map((project) => ({
+      const initData: JiraProjectsResponse = await response.json();
+
+      console.log('Data received from Jira:', initData);
+
+      const projects: IProject[] = [];
+
+      projects.push(...initData.values.map((project) => ({
         projectId: project.id,
         name: project.name,
         description: project.description || ''
-      }));
+      })));
+
+
+
+      let remained: number = initData.total;
+
+
+
+      while (query.startAt < remained + initData.total - 1) {
+
+        query.startAt = parseInt(query.startAt.toString());
+        query.maxResults = parseInt(query.maxResults.toString());
+
+        query.startAt += query.maxResults;
+        remained -= query.maxResults;
+
+        url.searchParams.set('startAt', query.startAt.toString());
+
+        url.searchParams.set('maxResults', query.maxResults.toString());
+
+        const nextResponse = await fetch(url.toString(), {
+          method: 'GET',
+          headers: {
+            'Authorization': this.authHeader,
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!nextResponse.ok) {
+          this.logger.error(`Error fetching projects from Jira: ${nextResponse.statusText}`);
+          throw new InternalServerErrorException('Failed to fetch projects from Jira');
+        }
+
+        const nextData: JiraProjectsResponse = await nextResponse.json();
+
+        console.log('Data received from Jira:', nextData);
+
+        projects.push(...nextData.values.map((project) => ({
+          projectId: project.id,
+          name: project.name,
+          description: project.description || ''
+        })));
+
+      }
 
       return projects;
     } catch (error) {

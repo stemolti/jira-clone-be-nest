@@ -12,6 +12,8 @@ export class ProjectsController {
 
   @Get()
   async getProjects(@Query() query: QueryProjectDTO) {
+    console.log(typeof query.startAt);
+    console.log(typeof query.maxResults);
     return this.projectsService.getAllProjects(query);
   }
 

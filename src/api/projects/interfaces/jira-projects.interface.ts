@@ -1,4 +1,5 @@
 export interface JiraProjectsResponse {
+  isLastPage: boolean
   maxResults: number
   nextPage: string
   startAt: number
