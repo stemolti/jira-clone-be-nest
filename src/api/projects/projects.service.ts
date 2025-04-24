@@ -78,8 +78,7 @@ export class ProjectsService {
       });
 
       if (!response.ok) {
-        this.logger.error(`Error fetching projects from Jira: ${response.statusText}`);
-        throw new InternalServerErrorException('Failed to fetch projects from Jira');
+        this.logger.error(`Error first fetching projects from Jira: ${response.statusText}`);
       }
 
       const data: JiraProjectsResponse = await response.json();
@@ -93,14 +92,16 @@ export class ProjectsService {
         query.startAt = parseInt(query.startAt.toString());
         query.maxResults = parseInt(query.maxResults.toString());
 
+        const url = new URL(jiraApiUrl)
+
         if (query.startAt) {
           url.searchParams.set('startAt', query.startAt.toString());
         }
-    
+
         if (query.maxResults) {
           url.searchParams.set('maxResults', query.maxResults.toString());
         }
-    
+
         if (query.query) {
           url.searchParams.set('query', query.query);
         }
@@ -115,7 +116,6 @@ export class ProjectsService {
 
         if (!nextResponse.ok) {
           this.logger.error(`Error fetching projects from Jira: ${nextResponse.statusText}`);
-          throw new InternalServerErrorException('Failed to fetch projects from Jira');
         }
 
         const nextData: JiraProjectsResponse = await nextResponse.json();
@@ -136,7 +136,6 @@ export class ProjectsService {
       return projects;
     } catch (error) {
       this.logger.error('Error fetching projects from Jira', error);
-      throw new InternalServerErrorException('Failed to fetch projects from Jira');
     }
   }
 

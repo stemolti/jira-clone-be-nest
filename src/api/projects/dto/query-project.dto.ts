@@ -1,15 +1,12 @@
-import { IsOptional, IsInt, IsString, IsArray, ArrayNotEmpty, ArrayUnique, IsNumber } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsOptional, IsString, IsNumber } from 'class-validator';
 
 export class QueryProjectDTO {
   @IsOptional()
   @IsNumber()
-  @Type(() => Number)
   startAt?: number;
 
   @IsOptional()
   @IsNumber()
-  @Type(() => Number)
   maxResults?: number;
 
   @IsOptional()

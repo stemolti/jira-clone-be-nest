@@ -1,12 +1,12 @@
-import { IsOptional, IsInt, IsString, ArrayNotEmpty, ArrayUnique } from 'class-validator';
+import { IsOptional, IsInt, IsString, ArrayNotEmpty, ArrayUnique, IsNumber } from 'class-validator';
 
 export class QueryBoardDTO {
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   startAt: number;
 
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   maxResults: number;
 
   @IsOptional()

@@ -1,12 +1,12 @@
-import { IsInt, IsOptional, IsString } from "class-validator";
+import { IsNumber, IsOptional, IsString } from "class-validator";
 
 export class QueryIssueDTO {
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   startAt?: number;
 
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   maxResults?: number;
 
   @IsOptional()

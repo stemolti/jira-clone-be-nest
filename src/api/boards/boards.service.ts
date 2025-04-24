@@ -54,23 +54,10 @@ export class BoardsService {
 
     const url = new URL(jiraApiUrl)
 
-    if (query.startAt) {
-      url.searchParams.append('startAt', query.startAt.toString());
-    }
-
-    if (query.maxResults) {
-      url.searchParams.append('maxResults', query.maxResults.toString());
-    }
-
-    if( query.name) {
-      url.searchParams.append('name', query.name);
-    }
-
-    if (query.projectKeyOrId) {
-      url.searchParams.append('projectKeyOrId', query.projectKeyOrId);
-    }
+    const boards: IBoard[] = [];
 
     try {
+
       const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
@@ -80,21 +67,68 @@ export class BoardsService {
       });
 
       if (!response.ok) {
-        this.logger.error(`Error fetching boards from Jira: ${response.statusText}`);
-        throw new InternalServerErrorException('Failed to fetch boards from Jira');
+        this.logger.error(`Error first fetching boards from Jira: ${response.statusText}`);
       }
 
       const data: JiraBoardsResponse = await response.json();
+
       console.log('Data received from Jira:', data);
-      const boards: IBoard[] = data.values.map((board) => ({
-        boardId: board.id,
-        name: board.name
-      }));
-      this.logger.log(` Mapped boards ${boards}`);
+
+      let remained: number = data.total
+
+
+      do {
+
+        query.startAt = parseInt(query.startAt.toString());
+        query.maxResults = parseInt(query.maxResults.toString());
+
+        const url = new URL(jiraApiUrl)
+
+        if (query.startAt) {
+          url.searchParams.append('startAt', query.startAt.toString());
+        }
+
+        if (query.maxResults) {
+          url.searchParams.append('maxResults', query.maxResults.toString());
+        }
+
+        if (query.name) {
+          url.searchParams.append('name', query.name);
+        }
+
+        if (query.projectKeyOrId) {
+          url.searchParams.append('projectKeyOrId', query.projectKeyOrId);
+        }
+
+        const nextResponse = await fetch(url.toString(), {
+          method: 'GET',
+          headers: {
+            'Authorization': this.authHeader,
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!nextResponse.ok) {
+          this.logger.error(`Error fetching projects from Jira: ${nextResponse.statusText}`);
+        }
+
+        const nextData: JiraBoardsResponse = await nextResponse.json();
+
+        console.log('Data received from Jira:', nextData);
+
+        boards.push(...nextData.values.map((board) => ({
+          boardId: board.id,
+          name: board.name
+        })));
+
+        query.startAt += query.maxResults;
+        remained -= query.maxResults;
+
+      } while ((query.startAt < (remained + data.total) - 1));
+
       return boards;
     } catch (error) {
       this.logger.error('Error fetching boards from Jira', error);
-      throw new InternalServerErrorException('Failed to fetch boards from Jira');
     }
   }
 }
