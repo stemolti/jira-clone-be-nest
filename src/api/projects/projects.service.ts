@@ -64,19 +64,9 @@ export class ProjectsService {
 
     const jiraApiUrl = `${this.baseUrl}/rest/api/3/project/search`;
 
+    const projects: IProject[] = [];
+
     const url = new URL(jiraApiUrl)
-
-    if (query.startAt) {
-      url.searchParams.set('startAt', query.startAt.toString());
-    }
-
-    if (query.maxResults) {
-      url.searchParams.append('maxResults', query.maxResults.toString());
-    }
-
-    if (query.query) {
-      url.searchParams.append('query', query.query);
-    }
 
     try {
       const response = await fetch(url.toString(), {
@@ -92,35 +82,28 @@ export class ProjectsService {
         throw new InternalServerErrorException('Failed to fetch projects from Jira');
       }
 
-      const initData: JiraProjectsResponse = await response.json();
+      const data: JiraProjectsResponse = await response.json();
 
-      console.log('Data received from Jira:', initData);
+      console.log('Data received from Jira:', data);
 
-      const projects: IProject[] = [];
+      let remained: number = data.total
 
-      projects.push(...initData.values.map((project) => ({
-        projectId: project.id,
-        name: project.name,
-        description: project.description || ''
-      })));
-
-
-
-      let remained: number = initData.total;
-
-
-
-      while (query.startAt < remained + initData.total - 1) {
+      do {
 
         query.startAt = parseInt(query.startAt.toString());
         query.maxResults = parseInt(query.maxResults.toString());
 
-        query.startAt += query.maxResults;
-        remained -= query.maxResults;
-
-        url.searchParams.set('startAt', query.startAt.toString());
-
-        url.searchParams.set('maxResults', query.maxResults.toString());
+        if (query.startAt) {
+          url.searchParams.set('startAt', query.startAt.toString());
+        }
+    
+        if (query.maxResults) {
+          url.searchParams.set('maxResults', query.maxResults.toString());
+        }
+    
+        if (query.query) {
+          url.searchParams.set('query', query.query);
+        }
 
         const nextResponse = await fetch(url.toString(), {
           method: 'GET',
@@ -145,7 +128,10 @@ export class ProjectsService {
           description: project.description || ''
         })));
 
-      }
+        query.startAt += query.maxResults;
+        remained -= query.maxResults;
+
+      } while (query.startAt < remained + data.total - 1)
 
       return projects;
     } catch (error) {
