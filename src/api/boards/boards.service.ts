@@ -25,7 +25,7 @@ export class BoardsService {
   }
 
 
-  async getAllBoards(query: QueryBoardDTO) {
+  async getAllBoards(projectIdOrKey: string, query: QueryBoardDTO) {
     try {
       const boards = await this.boardModel.find().exec();
 
@@ -35,7 +35,7 @@ export class BoardsService {
       }
       this.logger.log('No boards found in DB, fetching from Jira');
 
-      const jiraBoards = await this.fetchBoardsFromJira(query);
+      const jiraBoards = await this.fetchBoardsFromJira(projectIdOrKey, query);
 
       if (jiraBoards.length > 0) {
         const boards = await this.boardModel.insertMany(jiraBoards);
@@ -48,7 +48,7 @@ export class BoardsService {
   }
 
 
-  private async fetchBoardsFromJira(query: QueryBoardDTO) {
+  private async fetchBoardsFromJira(projectIdOrKey: string, query: QueryBoardDTO) {
 
     const jiraApiUrl = `${this.baseUrl}/rest/agile/1.0/board`;
 
@@ -118,6 +118,8 @@ export class BoardsService {
 
         boards.push(...nextData.values.map((board) => ({
           boardId: board.id,
+          projectId: board.location.projectId,
+          key: board.location.projectKey,
           name: board.name
         })));
 

@@ -10,4 +10,11 @@ export interface JiraBoardsResponse {
 export interface IJiraBoard {
   id: number
   name: string
+  location: Location
+}
+
+export interface Location {
+  projectId?: number
+  projectName?: string
+  projectKey?: string
 }
