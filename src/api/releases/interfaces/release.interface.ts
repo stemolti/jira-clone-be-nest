@@ -1,8 +1,9 @@
-export interface Release {
+export interface IRelease {
   releaseId: string;
-  projectId: string;
+  projectId: number;
   name: string;
-  status: string;
-  releaseDate: Date;
-  description?: string;
+  description: string;
+  releaseDate: string;
+  released: boolean;
+  archived: boolean;
 }

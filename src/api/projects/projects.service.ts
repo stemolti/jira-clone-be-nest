@@ -13,6 +13,8 @@ import { Issue } from '@api/issues/schemas/issue.schema';
 import { QueryReleaseDTO } from '@api/releases/dto/query-release.dto';
 import { stat } from 'fs';
 import { parse } from 'path';
+import { JiraReleasesResponse } from '@api/releases/interfaces/jira-releases.interface';
+import { IRelease } from '@api/releases/interfaces/release.interface';
 
 @Injectable()
 export class ProjectsService {
@@ -261,8 +263,19 @@ export class ProjectsService {
         throw new InternalServerErrorException('Failed to fetch releases from Jira');
       }
 
-      const data = await response.json();
-      return data;
+      const data: JiraReleasesResponse = await response.json();
+
+      const releases: IRelease[] = data.values.map((release) => ({
+        releaseId: release.id,
+        projectId: release.projectId,
+        name: release.name,
+        description: release.description || '',
+        releaseDate: release.releaseDate,
+        released: release.released,
+        archived: release.archived
+      }));
+
+      return releases;
     } catch (error) {
       this.logger.error('Error fetching releases from Jira', error);
       throw new InternalServerErrorException('Failed to fetch releases from Jira');

@@ -8,10 +8,13 @@ export interface JiraReleasesResponse {
 }
 
 export interface IJiraRelease {
-  description: string;
   id: string;
-  name: string;
   projectId: number;
+  name: string;
+  description: string;
   releaseDate?: string;
   released: boolean;
+  archived: boolean;
 }
+
+
