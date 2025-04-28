@@ -9,7 +9,8 @@ import { UpdateIssueDTO } from './dto/update-issue.dto';
 @Controller('projects')
 @UseInterceptors(CacheInterceptor)
 export class IssuesController {
-  constructor(private readonly issuesService: IssuesService) { }
+  constructor(private readonly issuesService: IssuesService
+  ) { }
 
   @Post('issues')
   async create(@Body() createDTO: CreateIssueDTO) {
@@ -24,5 +25,10 @@ export class IssuesController {
   @Get(':projectId/issues')
   async getIssuesByProject(@Param('projectId') projectId: string, @Query() query: QueryIssueDTO) {
     return this.issuesService.getAllIssuesByProject(projectId, query);
+  }
+
+  @Get(':sprintId/issues')
+  async getIssuesBySprint(@Param('sprintId') sprintId: string, @Query() query: QueryIssueDTO) {
+    return this.issuesService.getAllIssuesBySprint(sprintId, query);
   }
 }

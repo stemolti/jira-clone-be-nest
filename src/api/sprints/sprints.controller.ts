@@ -4,18 +4,13 @@ import { QuerySprintDTO } from './dto/query-sprint.dto';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { QueryIssueDTO } from '@api/issues/dto/query-issue.dto';
 
-@Controller('sprints')
+@Controller('projects')
 @UseInterceptors(CacheInterceptor)
 export class SprintsController {
   constructor(private readonly sprintsService: SprintsService) { }
 
-  @Get(':boardId')
+  @Get(':boardId/sprints')
   async getSprintsByBoard(@Param('boardId', ParseIntPipe) boardId: number, @Query() query: QuerySprintDTO) {
     return this.sprintsService.getAllSprintsByBoard(boardId, query);
-  }
-
-  @Get(':sprintId/issues')
-  async getIssuesBySprint(@Param('sprintId') sprintId: string, @Query() query: QueryIssueDTO) {
-    return this.sprintsService.getAllIssuesBySprint(sprintId, query);
   }
 }
