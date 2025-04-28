@@ -27,27 +27,27 @@ export class ProjectsService {
 
   async getAllProjects(query: QueryProjectDTO) {
     try {
-      const projects = await this.projectModel.find().exec();
-
-      if (projects && projects.length > 0) {
+      const existing = await this.projectModel.find().exec();
+      if (existing.length) {
         this.logger.log('Projects found on DB');
-        return projects
+        return existing;
       }
-      this.logger.log('No projects found in DB, fetching from Jira');
 
+      this.logger.log('No projects in DB, fetching from Jira');
       const jiraProjects = await this.fetchProjectsFromJira(query);
 
-      if (jiraProjects.length > 0) {
+      if (jiraProjects.length) {
         await this.projectModel.insertMany(jiraProjects);
         this.logger.log(`Projects saved on DB: ${jiraProjects.length}`);
       }
 
-      return await this.projectModel.find().exec();
+      return this.projectModel.find().exec();
     } catch (error) {
       this.logger.error('Error fetching projects', error);
       throw new InternalServerErrorException('Failed to fetch projects');
     }
   }
+
 
 
   private async fetchProjectsFromJira(query: QueryProjectDTO) {
@@ -56,17 +56,16 @@ export class ProjectsService {
 
     const projects: IProject[] = [];
 
-    const url = new URL(jiraApiUrl)
 
     try {
-      let remained: number = -1;
 
-      do {
+      let total = Infinity
 
-        query.startAt = parseInt(query.startAt.toString());
-        query.maxResults = parseInt(query.maxResults.toString());
+      while (query.startAt < total) {
 
         const url = new URL(jiraApiUrl)
+
+        query.startAt = parseInt(query.startAt.toString());
 
         if (query.startAt) {
           url.searchParams.set('startAt', query.startAt.toString());
@@ -80,7 +79,7 @@ export class ProjectsService {
           url.searchParams.set('query', query.query);
         }
 
-        const nextResponse = await fetch(url.toString(), {
+        const response = await fetch(url.toString(), {
           method: 'GET',
           headers: {
             'Authorization': this.authHeader,
@@ -88,35 +87,27 @@ export class ProjectsService {
           }
         });
 
-        if (!nextResponse.ok) {
-          this.logger.error(`Error fetching projects from Jira: ${nextResponse.statusText}`);
+        if (!response.ok) {
+          this.logger.error(`Error fetching projects from Jira: ${response.statusText}`);
         }
 
-        const nextData: JiraProjectsResponse = await nextResponse.json();
+        const data: JiraProjectsResponse = await response.json();
 
-        if (remained < 0) {
-          remained = nextData.total
-        }
+        // Deconstructing
+        ({ total } = data)
 
-        console.log('Data received from Jira:', nextData);
-
-        projects.push(...nextData.values.map((project) => ({
+        projects.push(...data.values.map((project) => ({
           projectId: project.id,
           name: project.name,
-          description: project.description || ''
+          description: project.description
         })));
 
-        query.startAt += nextData.values.length;
-        remained -= nextData.values.length;
-
-      } while (remained > 0);
+        query.startAt += data.values.length;
+      }
 
       return projects;
     } catch (error) {
       this.logger.error('Error fetching projects from Jira', error);
     }
   }
-
-
-
 }
