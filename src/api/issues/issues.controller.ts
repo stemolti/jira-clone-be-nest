@@ -17,7 +17,12 @@ export class IssuesController {
   }
 
   @Put(':projectId/issues/:issueId')
-  async update(@Param('projectId') projectId: string , @Param('issueId') issueId: string, @Body() updateDTO: UpdateIssueDTO) {
+  async update(@Param('projectId') projectId: string, @Param('issueId') issueId: string, @Body() updateDTO: UpdateIssueDTO) {
     return this.issuesService.updateIssue(projectId, issueId, updateDTO);
+  }
+
+  @Get(':projectId/issues')
+  async getIssuesByProject(@Param('projectId') projectId: string, @Query() query: QueryIssueDTO) {
+    return this.issuesService.getAllIssuesByProject(projectId, query);
   }
 }
