@@ -19,7 +19,6 @@ export class IssuesService {
 
   constructor(
     private readonly configService: ConfigService,
-    @InjectModel(Issue.name) private readonly boardModel: Model<Issue>,
     @InjectModel(Issue.name) private readonly issueModel: Model<Issue>,
 
   ) {
@@ -191,7 +190,7 @@ export class IssuesService {
   async getAllIssuesByProject(projectId: string, query: QueryIssueDTO) {
     try {
       const issues = await this.issueModel.find({ projectId: projectId }).exec();
-      if (issues && issues.length > 0) {
+      if (issues.length) {
         this.logger.log('Issues found on DB');
         return issues;
       }
@@ -200,13 +199,11 @@ export class IssuesService {
 
       const jiraIssues = await this.fetchIssuesFromJiraByProject(projectId, query);
 
-      if (jiraIssues.length > 0) {
-        await this.issueModel.insertMany(jiraIssues);
+      if (jiraIssues.length) {
+        const issues = await this.issueModel.insertMany(jiraIssues);
         this.logger.log(`Issues saved on DB: ${jiraIssues.length}`);
+        return issues;
       }
-
-      return await this.issueModel.find({ projectId: projectId }).exec();
-
     } catch (error) {
       this.logger.error('Error fetching issues', error);
       throw new InternalServerErrorException('Failed to fetch issues');
@@ -215,47 +212,59 @@ export class IssuesService {
 
   private async fetchIssuesFromJiraByProject(projectId: string, query: QueryIssueDTO) {
     const jiraApiUrl = `${this.baseUrl}/rest/api/3/search`;
-    const url = new URL(jiraApiUrl);
 
-    query.jql = `project = ${projectId}`;
-
-    if (query.startAt) {
-      url.searchParams.append('startAt', query.startAt.toString());
-    }
-
-    if (query.maxResults) {
-      url.searchParams.append('maxResults', query.maxResults.toString());
-    }
-
-    if (query.jql) {
-      url.searchParams.append('jql', query.jql);
-    }
-
-    this.logger.log('url', url.toString());
     try {
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Authorization': this.authHeader,
-          'Accept': 'application/json'
-        }
-      });
+      query.jql = `project = ${projectId}`;
 
-      if (!response.ok) {
-        this.logger.error(`Error fetching issues from Jira: ${response.statusText}`);
-        throw new InternalServerErrorException(`Failed to fetch issues from Jira: ${response.statusText}`);
+      const issues: IIssue[] = [];
+
+      let total = Infinity;
+
+      const url = new URL(jiraApiUrl);
+
+      url.searchParams.append('jql', query.jql);
+
+      while (query.startAt < total) {
+        query.startAt = parseInt(query.startAt.toString());
+        query.maxResults = parseInt(query.maxResults.toString());
+
+        if (query.startAt) {
+          url.searchParams.append('startAt', query.startAt.toString());
+        }
+
+        if (query.maxResults) {
+          url.searchParams.append('maxResults', query.maxResults.toString());
+        }
+
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: {
+            'Authorization': this.authHeader,
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          this.logger.error(`Error fetching issues from Jira: ${response.statusText}`);
+          throw new InternalServerErrorException(`Failed to fetch issues from Jira: ${response.statusText}`);
+        }
+
+        const data: JiraIssuesResponse = await response.json();
+        ({ total } = data)
+
+        this.logger.log('Data received from Jira:', data);
+
+        issues.push(...data.issues.map((issue) => ({
+          issueId: issue.id,
+          projectId: projectId,
+          summary: issue.key,
+          description: issue.fields.description?.content?.map((content) => content?.content?.map((c) => c.text).join(' ')).join(' '),
+          status: issue.fields.status.name,
+        })));
+
+        this.logger.log(`Issues fetched from Jira: ${issues.length}`);
       }
 
-      const data: JiraIssuesResponse = await response.json();
-      const issues: IIssue[] = data.issues.map((issue) => ({
-        issueId: issue.id,
-        projectId: issue.fields.project.id,
-        summary: issue.key,
-        description: issue.fields.description?.content?.map((content) => content?.content?.map((c) => c.text).join(' ')).join(' '),
-        status: issue.fields.status.name,
-      }));
-
-      this.logger.log(`Issues fetched from Jira: ${issues.length}`);
       return issues;
     } catch (error) {
       this.logger.error('Error fetching issues from Jira', error);
@@ -265,22 +274,22 @@ export class IssuesService {
 
   async getAllIssuesBySprint(sprintId: string, query: QueryIssueDTO) {
     try {
-      const issues = await this.issueModel.find({ sprintId }).exec();
+      const issues = await this.issueModel.find({ sprintId: sprintId }).exec();
 
-      if (issues && issues.length > 0) {
+      if (issues.length > 0) {
         this.logger.log('Issues found on DB');
         return issues;
       }
       this.logger.log('No issues found in DB, fetching from Jira');
-
+      console.log('>>>>>>>>>>>>>>>>>>');
       const jiraIssues = await this.fetchIssuesFromJiraBySprint(sprintId, query);
 
-      if (jiraIssues.length > 0) {
-        await this.issueModel.insertMany(jiraIssues);
+      if (jiraIssues.length) {
+        const issues = await this.issueModel.insertMany(jiraIssues);
         this.logger.log(`Issues saved on DB: ${jiraIssues.length}`);
-      }
 
-      return await this.issueModel.find({ sprintId }).exec();
+        return issues;
+      }
     } catch (error) {
       this.logger.error('Error fetching issues', error);
       throw new InternalServerErrorException('Failed to fetch issues');
@@ -288,59 +297,90 @@ export class IssuesService {
   }
 
   private async fetchIssuesFromJiraBySprint(sprintId: string, query: QueryIssueDTO) {
+
     const jiraApiUrl = `${this.baseUrl}/rest/agile/1.0/sprint/${sprintId}/issue`;
-    const url = new URL(jiraApiUrl);
 
-    if (query.startAt) {
-      url.searchParams.append('startAt', query.startAt.toString());
-    }
-
-    if (query.maxResults) {
-      url.searchParams.append('maxResults', query.maxResults.toString());
-    }
+    const issues: IIssue[] = [];
 
     try {
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Authorization': this.authHeader,
-          'Accept': 'application/json'
+
+      let total = Infinity;
+
+      const url = new URL(jiraApiUrl)
+
+      while (query.startAt < total) {
+
+        query.startAt = parseInt(query.startAt?.toString());
+        query.maxResults = parseInt(query.maxResults?.toString());
+
+
+        if (query.startAt) {
+          url.searchParams.append('startAt', query.startAt.toString());
         }
-      });
 
-      if (!response.ok) {
-        this.logger.error(`Error fetching issues from Jira: ${response.statusText}`);
-        throw new InternalServerErrorException(`Failed to fetch issues from Jira: ${response.statusText}`);
+        if (query.maxResults) {
+          url.searchParams.append('maxResults', query.maxResults.toString());
+        }
+
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: {
+            'Authorization': this.authHeader,
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          this.logger.error(`Error fetching issues from Jira: ${response.statusText}`);
+          throw new InternalServerErrorException(`Failed to fetch issues from Jira: ${response.statusText}`);
+        }
+
+        const data: JiraIssuesResponse = await response.json();
+
+        ({ total } = data)
+
+        this.logger.log('Data received from Jira:', data);
+
+        issues.push(...data.issues.map((issue) => ({
+          issueId: issue.id,
+          sprintId: sprintId,
+          projectId: issue.fields.project.id,
+          summary: issue.key,
+          description: issue.fields.description?.content?.map((content) => content?.content?.map((c) => c.text).join(' ')).join(' '),
+          status: issue.fields.status.name,
+        })));
+
+        query.startAt += data.issues.length;
       }
-
-      const data: JiraIssuesResponse = await response.json();
-
-      const issues: IIssue[] = data.issues.map((issue) => ({
-        issueId: issue.id,
-        projectId: issue.fields.project.id,
-        summary: issue.key,
-        description: issue.fields.description?.content.map((content) => content.content.map((c) => c.text).join(' ')).join(' '),
-        status: issue.fields.status.name,
-        sprintId: sprintId
-      }));
 
       this.logger.log(`Issues fetched from Jira: ${issues.length}`);
       return issues;
     } catch (error) {
       this.logger.error('Error fetching issues from Jira', error);
       throw new InternalServerErrorException('Failed to fetch issues from Jira');
+
     }
   }
 
   async getAllIssuesByRelease(releaseId: string, query: QueryIssueDTO) {
     try {
-      const issues = await this.fetchIssuesFromJiraByRelease(releaseId, query);
+      const issues = await this.issueModel.find({ releaseId: releaseId }).exec();
 
-      if (!issues) {
-        this.logger.log('No issues found in DB, fetching from Jira');
+      if (issues.length) {
+        this.logger.log('Issues found on DB');
+        return issues;
+      }
+      this.logger.log('No issues found in DB, fetching from Jira');
+
+      const jiraIssues = await this.fetchIssuesFromJiraByRelease(releaseId, query);
+
+      if (jiraIssues.length) {
+        const issues = await this.issueModel.insertMany(jiraIssues);
+
+        this.logger.log(`Issues saved on DB: ${jiraIssues.length}`);
+        return issues;
       }
 
-      return issues;
     } catch (error) {
       this.logger.error('Error fetching issues', error);
       throw new Error('Failed to fetch issues');
@@ -349,50 +389,74 @@ export class IssuesService {
 
   private async fetchIssuesFromJiraByRelease(releaseId: string, query: QueryIssueDTO) {
 
+    const issues: IIssue[] = [];
+
     const jiraApiUrl = `${this.baseUrl}/rest/api/3/search`;
-
-    const url = new URL(jiraApiUrl);
-
-    query.jql = `fixVersion = ${releaseId}`;
-
-    if (query.startAt) {
-      url.searchParams.append('startAt', query.startAt.toString());
-    }
-
-    if (query.maxResults) {
-      url.searchParams.append('maxResults', query.maxResults.toString())
-    }
 
     try {
 
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Authorization': this.authHeader,
-          'Accept': 'application/json',
-        },
-      });
+      const url = new URL(jiraApiUrl);
 
-      if (!response.ok) {
-        this.logger.error(`Failed to fetch issues from JIRA: ${response.statusText}`);
-        return null;
+
+      let total = Infinity;
+
+      query.jql = `fixVersion = ${releaseId}`;
+
+      url.searchParams.append('jql', query.jql);
+
+      while (query.startAt < total) {
+
+        query.startAt = parseInt(query.startAt.toString());
+        query.maxResults = parseInt(query.maxResults.toString());
+
+        if (query.startAt) {
+          url.searchParams.append('startAt', query.startAt.toString());
+        }
+
+        if (query.maxResults) {
+          url.searchParams.append('maxResults', query.maxResults.toString());
+        }
+
+
+
+        this.logger.log('url', url.toString());
+
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: {
+            'Authorization': this.authHeader,
+            'Accept': 'application/json'
+          }
+        });
+        if (!response.ok) {
+          this.logger.error(`Error fetching issues from Jira: ${response.statusText}`);
+          throw new InternalServerErrorException(`Failed to fetch issues from Jira: ${response.statusText}`);
+        }
+        const data: JiraIssuesResponse = await response.json();
+        ({ total } = data)
+
+        this.logger.log('Data received from Jira:', data);
+
+        issues.push(...data.issues.map((issue) => ({
+          issueId: issue.id,
+          releaseId: releaseId,
+          projectId: issue.fields.project.id,
+          summary: issue.key,
+          description: issue.fields.description?.content?.map((content) => content?.content?.map((c) => c.text).join(' ')).join(' '),
+          status: issue.fields.status.name,
+        })));
+
+        this.logger.log(`Issues fetched from Jira: ${issues.length}`);
+
+        query.startAt += data.issues.length;
       }
 
-      const data = await response.json();
-
-      const issues: IIssue[] = data.issues.map((issue) => ({
-        issueId: issue.id,
-        releaseId: releaseId,
-        projectId: issue.fields.project.id,
-        summary: issue.key,
-        description: issue.fields.description?.content?.map((content) => content?.content?.map((c) => c.text).join(' ')).join(' '),
-        status: issue.fields.status.name,
-        sprintId: issue.fields.sprint?.id,
-      }));
+      this.logger.log(`Issues fetched from Jira: ${issues.length}`);
       return issues;
     } catch (error) {
-      this.logger.error('Error fetching issues from JIRA', error);
-      return null;
+      this.logger.error('Error fetching issues from Jira', error);
+      throw new InternalServerErrorException('Failed to fetch issues from Jira');
+
     }
   }
 }

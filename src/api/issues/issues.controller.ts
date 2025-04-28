@@ -26,13 +26,13 @@ export class IssuesController {
     return this.issuesService.getAllIssuesByProject(projectId, query);
   }
 
-  @Get(':sprintId/issues')
+  @Get('sprint/:sprintId/issues')
   async getIssuesBySprint(@Param('sprintId') sprintId: string, @Query() query: QueryIssueDTO) {
     return this.issuesService.getAllIssuesBySprint(sprintId, query);
   }
 
-    @Get(':releaseId/issues')
-    async getIssuesByRelease(@Param('releaseId') releaseId: string, @Query() query: QueryIssueDTO) {
-      return this.issuesService.getAllIssuesByRelease(releaseId, query);
-    }
+  @Get('release/:releaseId/issues')
+  async getIssuesByRelease(@Param('releaseId') releaseId: string, @Query() query: QueryIssueDTO) {
+    return this.issuesService.getAllIssuesByRelease(releaseId, query);
+  }
 }
