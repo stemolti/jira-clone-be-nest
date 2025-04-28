@@ -1,7 +1,6 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query, UseInterceptors } from '@nestjs/common';
 import { IssuesService } from './issues.service';
 import { QueryIssueDTO } from './dto/query-issue.dto';
-import { Issue } from './schemas/issue.schema';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { CreateIssueDTO } from './dto/create-issue.dto';
 import { UpdateIssueDTO } from './dto/update-issue.dto';
@@ -31,4 +30,9 @@ export class IssuesController {
   async getIssuesBySprint(@Param('sprintId') sprintId: string, @Query() query: QueryIssueDTO) {
     return this.issuesService.getAllIssuesBySprint(sprintId, query);
   }
+
+    @Get(':releaseId/issues')
+    async getIssuesByRelease(@Param('releaseId') releaseId: string, @Query() query: QueryIssueDTO) {
+      return this.issuesService.getAllIssuesByRelease(releaseId, query);
+    }
 }

@@ -1,10 +1,7 @@
-import { QueryIssueDTO } from '@api/issues/dto/query-issue.dto';
-import { IIssue } from '@api/issues/interfaces/issue.interface';
 import { Issue } from '@api/issues/schemas/issue.schema';
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
-import { stat } from 'fs';
 import { Model } from 'mongoose';
 import { IRelease } from './interfaces/release.interface';
 import { JiraReleasesResponse } from './interfaces/jira-releases.interface';
@@ -23,70 +20,6 @@ export class ReleasesService {
     const apiToken = this.configService.get<string>('JIRA_API_TOKEN');
     const encoded = Buffer.from(`${email}:${apiToken}`).toString('base64');
     this.authHeader = `Basic ${encoded}`;
-  }
-
-  async getAllIssuesByRelease(releaseId: string, query: QueryIssueDTO) {
-    try {
-      const issues = await this.fetchIssuesFromJiraByRelease(releaseId, query);
-
-      if (!issues) {
-        this.logger.log('No issues found in DB, fetching from Jira');
-      }
-
-      return issues;
-    } catch (error) {
-      this.logger.error('Error fetching issues', error);
-      throw new Error('Failed to fetch issues');
-    }
-  }
-
-  private async fetchIssuesFromJiraByRelease(releaseId: string, query: QueryIssueDTO) {
-
-    const jiraApiUrl = `${this.baseUrl}/rest/api/3/search`;
-
-    const url = new URL(jiraApiUrl);
-
-    query.jql = `fixVersion = ${releaseId}`;
-
-    if (query.startAt) {
-      url.searchParams.append('startAt', query.startAt.toString());
-    }
-
-    if (query.maxResults) {
-      url.searchParams.append('maxResults', query.maxResults.toString())
-    }
-
-    try {
-
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Authorization': this.authHeader,
-          'Accept': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        this.logger.error(`Failed to fetch issues from JIRA: ${response.statusText}`);
-        return null;
-      }
-
-      const data = await response.json();
-
-      const issues: IIssue[] = data.issues.map((issue) => ({
-        issueId: issue.id,
-        releaseId: releaseId,
-        projectId: issue.fields.project.id,
-        summary: issue.key,
-        description: issue.fields.description?.content?.map((content) => content?.content?.map((c) => c.text).join(' ')).join(' '),
-        status: issue.fields.status.name,
-        sprintId: issue.fields.sprint?.id,
-      }));
-      return issues;
-    } catch (error) {
-      this.logger.error('Error fetching issues from JIRA', error);
-      return null;
-    }
   }
 
   async getAllReleasesByProject(projectIdOrKey: string, query: QueryReleaseDTO) {

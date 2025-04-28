@@ -7,9 +7,6 @@ import { Sprint } from './schemas/sprint.schema';
 import { ISprint } from './interfaces/sprint.interface';
 import { JiraSprintsResponse } from './interfaces/jira-sprint.interface';
 import { Issue } from '@api/issues/schemas/issue.schema';
-import { QueryIssueDTO } from '@api/issues/dto/query-issue.dto';
-import { IIssue } from '@api/issues/interfaces/issue.interface';
-import { JiraIssuesResponse } from '@api/issues/interfaces/jira-issue.interface';
 
 @Injectable()
 export class SprintsService {

@@ -2,8 +2,6 @@ import { CacheInterceptor } from '@nestjs/cache-manager';
 import { Controller, Get, Param, Query, UseInterceptors } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { QueryProjectDTO } from './dto/query-project.dto';
-import { QueryIssueDTO } from '@api/issues/dto/query-issue.dto';
-import { QueryReleaseDTO } from '@api/releases/dto/query-release.dto';
 
 @Controller('projects')
 @UseInterceptors(CacheInterceptor)
