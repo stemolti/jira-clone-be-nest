@@ -48,8 +48,6 @@ export class ProjectsService {
     }
   }
 
-
-
   private async fetchProjectsFromJira(query: QueryProjectDTO) {
 
     const jiraApiUrl = `${this.baseUrl}/rest/api/3/project/search`;
