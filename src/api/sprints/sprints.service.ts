@@ -30,7 +30,7 @@ export class SprintsService {
     try {
       const sprints = await this.sprintModel.find({ boardId: boardId }).exec();
 
-      if (sprints && sprints.length > 0) {
+      if (sprints.length) {
         this.logger.log('Sprints found on DB');
         return sprints;
       }
@@ -38,13 +38,12 @@ export class SprintsService {
 
       const jiraSprints = await this.fetchSprintsFromJiraByBoard(boardId, query);
 
-      if (jiraSprints.length > 0) {
+      if (jiraSprints.length) {
         await this.sprintModel.insertMany(jiraSprints);
         this.logger.log(`Sprints saved on DB: ${jiraSprints.length}`);
         const sprints = await this.sprintModel.find({ boardId }).exec();
         return sprints;
       }
-
     } catch (error) {
       this.logger.error('Error fetching sprints', error);
       throw new InternalServerErrorException('Failed to fetch sprints');
@@ -53,49 +52,64 @@ export class SprintsService {
 
   private async fetchSprintsFromJiraByBoard(boardId: number, query: QuerySprintDTO) {
 
-    const fetch = require('node-fetch');
     const jiraApiUrl = `${this.baseUrl}/rest/agile/1.0/board/${boardId}/sprint`;
-    const url = new URL(jiraApiUrl);
 
-    if (query.startAt) {
-      url.searchParams.append('startAt', query.startAt.toString());
-    }
-
-    if (query.maxResults) {
-      url.searchParams.append('maxResults', query.maxResults.toString());
-    }
-
-    if (query.state) {
-      url.searchParams.append('state', query.state.toString());
-    }
+    const sprints: ISprint[] = [];
 
     try {
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Authorization': this.authHeader,
-          'Accept': 'application/json',
-        },
-      });
 
-      if (!response.ok) {
-        this.logger.error('Error fetching sprints from Jira', response.statusText);
-        throw new InternalServerErrorException(`Failed to fetch sprints from Jira: ${response.statusText}`);
+      let total = Infinity;
+
+      while (query.startAt < total) {
+
+        const url = new URL(jiraApiUrl);
+
+        query.startAt = parseInt(query.startAt.toString());
+        query.maxResults = parseInt(query.maxResults.toString());
+
+        if (query.startAt) {
+          url.searchParams.append('startAt', query.startAt.toString());
+        }
+
+        if (query.maxResults) {
+          url.searchParams.append('maxResults', query.maxResults.toString());
+        }
+
+        if (query.state) {
+          url.searchParams.append('state', query.state.toString());
+        }
+
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: {
+            'Authorization': this.authHeader,
+            'Accept': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          this.logger.error('Error fetching sprints from Jira', response.statusText);
+          throw new InternalServerErrorException(`Failed to fetch sprints from Jira: ${response.statusText}`);
+        }
+
+        const data: JiraSprintsResponse = await response.json();
+
+        ({ total } = data);
+
+        this.logger.log('Data received from Jira:', data);
+
+        sprints.push(...data.values.map((sprint) => ({
+          sprintId: sprint.id,
+          boardId: boardId,
+          name: sprint.name,
+          state: sprint.state,
+          startDate: sprint.startDate,
+          endDate: sprint.endDate,
+          goal: sprint.goal,
+        })));
+
+        query.startAt += data.values.length;
       }
-
-      const data: JiraSprintsResponse = await response.json();
-
-      console.log('Data received from', data);
-
-      const sprints: ISprint[] = data.values.map((sprint) => ({
-        sprintId: sprint.id,
-        boardId: boardId,
-        name: sprint.name,
-        state: sprint.state,
-        startDate: sprint.startDate,
-        endDate: sprint.endDate,
-        goal: sprint.goal,
-      }));
 
       this.logger.log(`Fetched ${sprints.length} sprints from Jira`);
       return sprints;

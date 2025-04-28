@@ -37,8 +37,11 @@ export class ProjectsService {
       const jiraProjects = await this.fetchProjectsFromJira(query);
 
       if (jiraProjects.length) {
-        await this.projectModel.insertMany(jiraProjects);
+        const projects = await this.projectModel.insertMany(jiraProjects);
+
         this.logger.log(`Projects saved on DB: ${jiraProjects.length}`);
+
+        return projects;
       }
 
       return this.projectModel.find().exec();
@@ -64,6 +67,7 @@ export class ProjectsService {
         const url = new URL(jiraApiUrl)
 
         query.startAt = parseInt(query.startAt.toString());
+        query.maxResults = parseInt(query.maxResults.toString());
 
         if (query.startAt) {
           url.searchParams.set('startAt', query.startAt.toString());

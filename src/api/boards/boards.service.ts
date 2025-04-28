@@ -25,7 +25,7 @@ export class BoardsService {
   }
 
 
-  async getAllBoards(projectIdOrKey: string, query: QueryBoardDTO) {
+  async getAllBoardsByProject(projectIdOrKey: string, query: QueryBoardDTO) {
     try {
       const boards = await this.boardModel.find().exec();
 
@@ -35,19 +35,20 @@ export class BoardsService {
       }
       this.logger.log('No boards found in DB, fetching from Jira');
 
-      const jiraBoards = await this.fetchBoardsFromJira(projectIdOrKey, query);
+      const jiraBoards = await this.fetchBoardsFromJiraByProject(projectIdOrKey, query);
 
       if (jiraBoards.length) {
         const boards = await this.boardModel.insertMany(jiraBoards);
         this.logger.log(`Boards saved on DB: ${jiraBoards.length}`)
+        return boards;
       }
-      return boards;
     } catch (error) {
-
+      this.logger.error('Error fetching boards', error);
+      throw new InternalServerErrorException('Failed to fetch boards');
     }
   }
 
-  private async fetchBoardsFromJira(projectIdOrKey: string, query: QueryBoardDTO) {
+  private async fetchBoardsFromJiraByProject(projectIdOrKey: string, query: QueryBoardDTO) {
 
     const jiraApiUrl = `${this.baseUrl}/rest/agile/1.0/board`;
 
@@ -57,13 +58,18 @@ export class BoardsService {
 
       let total = Infinity;
 
+      query.projectKeyOrId = projectIdOrKey;
+
+      const url = new URL(jiraApiUrl)
+
+      url.searchParams.append('projectKeyOrId', query.projectKeyOrId);
+
       while (query.startAt < total) {
 
-        const url = new URL(jiraApiUrl)
+        const url = new URL(jiraApiUrl);
 
         query.startAt = parseInt(query.startAt.toString());
         query.maxResults = parseInt(query.maxResults.toString());
-
 
         if (query.startAt) {
           url.searchParams.append('startAt', query.startAt.toString());
@@ -77,9 +83,6 @@ export class BoardsService {
           url.searchParams.append('name', query.name);
         }
 
-        if (query.projectKeyOrId) {
-          url.searchParams.append('projectKeyOrId', query.projectKeyOrId);
-        }
 
         const response = await fetch(url.toString(), {
           method: 'GET',

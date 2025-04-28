@@ -6,6 +6,7 @@ import { Model } from 'mongoose';
 import { IRelease } from './interfaces/release.interface';
 import { JiraReleasesResponse } from './interfaces/jira-releases.interface';
 import { QueryReleaseDTO } from './dto/query-release.dto';
+import { Release } from './schemas/release.schema';
 
 @Injectable()
 export class ReleasesService {
@@ -14,7 +15,7 @@ export class ReleasesService {
   private readonly authHeader: string;
 
   constructor(private readonly configService: ConfigService,
-    @InjectModel(Issue.name) private readonly issueModel: Model<Issue>) {
+    @InjectModel(Release.name) private readonly releaseModel: Model<Release>) {
     this.baseUrl = this.configService.get<string>('JIRA_BASE_URL');
     const email = this.configService.get<string>('JIRA_EMAIL');
     const apiToken = this.configService.get<string>('JIRA_API_TOKEN');
@@ -24,7 +25,21 @@ export class ReleasesService {
 
   async getAllReleasesByProject(projectIdOrKey: string, query: QueryReleaseDTO) {
     try {
-      const releases = await this.fetchReleasesFromJiraByProject(projectIdOrKey, query);
+      const releases = await this.releaseModel.find({ projectIdOrKey }).exec();
+      if (releases.length) {
+        this.logger.log('Releases found on DB');
+        return releases;
+      }
+      this.logger.log('No releases found in DB, fetching from Jira');
+
+      const jiraReleases = await this.fetchReleasesFromJiraByProject(projectIdOrKey, query);
+
+      if (jiraReleases.length) {
+        const releases = await this.releaseModel.insertMany(jiraReleases);
+        this.logger.log(`Releases saved on DB: ${jiraReleases.length}`);
+        return releases;
+      }
+
       return releases;
     } catch (error) {
       this.logger.error('Error fetching releases', error);
@@ -32,57 +47,70 @@ export class ReleasesService {
     }
   }
 
-
   private async fetchReleasesFromJiraByProject(projectIdOrKey: string, query: QueryReleaseDTO) {
     const jiraApiUrl = `${this.baseUrl}/rest/api/3/project/${projectIdOrKey}/version`;
-    const url = new URL(jiraApiUrl);
 
-    if (query.startAt) {
-      url.searchParams.append('startAt', query.startAt.toString());
-    }
-
-    if (query.maxResults) {
-      url.searchParams.append('maxResults', query.maxResults.toString());
-    }
-
-    if (query.orderBy) {
-      url.searchParams.append('orderBy', query.orderBy);
-    }
-
-    if (query.query) {
-      url.searchParams.append('query', query.query);
-    }
+    const releases: IRelease[] = [];
 
     try {
-      console.log('url', url.toString());
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Authorization': this.authHeader,
-          'Accept': 'application/json'
-        }
-      });
+      let total = Infinity;
 
-      if (!response.ok) {
-        this.logger.error(`Error fetching releases from Jira: ${response.statusText}`);
-        throw new InternalServerErrorException('Failed to fetch releases from Jira');
+      while (query.startAt < total) {
+
+        const url = new URL(jiraApiUrl);
+
+        query.startAt = parseInt(query.startAt.toString());
+        query.maxResults = parseInt(query.maxResults.toString());
+
+        if (query.startAt) {
+          url.searchParams.append('startAt', query.startAt.toString());
+        }
+
+        if (query.maxResults) {
+          url.searchParams.append('maxResults', query.maxResults.toString());
+        }
+
+        if (query.query) {
+          url.searchParams.append('query', query.query);
+        }
+
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: {
+            'Authorization': this.authHeader,
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          this.logger.error(`Error fetching releases from Jira: ${response.statusText}`);
+          throw new InternalServerErrorException('Failed to fetch releases from Jira');
+        }
+
+        const data: JiraReleasesResponse = await response.json();
+
+        ({ total } = data);
+
+        this.logger.log('Data received from Jira:', data);
+
+        releases.push(...data.values.map((release) => ({
+          releaseId: release.id,
+          projectId: release.projectId,
+          name: release.name,
+          description: release.description || '',
+          releaseDate: release.releaseDate,
+          released: release.released,
+          archived: release.archived
+        })));
+
+        query.startAt += data.values.length;
       }
 
-      const data: JiraReleasesResponse = await response.json();
-
-      const releases: IRelease[] = data.values.map((release) => ({
-        releaseId: release.id,
-        projectId: release.projectId,
-        name: release.name,
-        description: release.description || '',
-        releaseDate: release.releaseDate,
-        released: release.released,
-        archived: release.archived
-      }));
-
+      this.logger.log('Releases fetched from Jira:', releases.length);
       return releases;
     } catch (error) {
       this.logger.error('Error fetching releases from Jira', error);
+      throw new InternalServerErrorException('Failed to fetch releases from Jira');
     }
   }
 }

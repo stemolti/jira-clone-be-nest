@@ -6,10 +6,10 @@ import { QueryBoardDTO } from './dto/query-board.dto';
 @Controller('projects')
 @UseInterceptors(CacheInterceptor)
 export class BoardsController {
-  constructor(private boardsService: BoardsService) {}
+  constructor(private boardsService: BoardsService) { }
 
   @Get(':projectIdOrKey/boards')
-  async getBoards(@Param('projectIdOrKey') projectIdOrKey: string, @Query() query: QueryBoardDTO) {
-    return this.boardsService.getAllBoards(projectIdOrKey, query);
+  async getBoardsByProject(@Param('projectIdOrKey') projectIdOrKey: string, @Query() query: QueryBoardDTO) {
+    return this.boardsService.getAllBoardsByProject(projectIdOrKey, query);
   }
 }
